@@ -9,7 +9,7 @@ using namespace std;
 
 unordered_set<string> string_set::set;
 
-string_set::string_set() {
+string_set::string_set() {    
    set.max_load_factor (0.5);
 }
 

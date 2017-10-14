@@ -5,6 +5,7 @@
 // tokens.
 
 #include <string>
+#include <iostream>
 using namespace std;
 
 #include <errno.h>
@@ -13,11 +14,12 @@ using namespace std;
 #include <stdlib.h>
 #include <string.h>
 #include <wait.h>
+#include <getopt.h>
 
 #include "auxlib.h"
 #include "string_set.h"
 
-const string CPP = "/usr/bin/cpp -nostdinc";
+const string CPP = "/usr/bin/cpp -nostdinc ";
 constexpr size_t LINESIZE = 1024;
 
 // Chomp the last character from a buffer if it is delim.
@@ -61,7 +63,7 @@ void chomp(char* string, char delim)
 
 // Run cpp against the lines of the file.
 void cpplines(FILE* pipe, const char* filename)
-{
+{    
     int linenr = 1;
     char inputname[LINESIZE];
     strcpy(inputname, filename);
@@ -88,6 +90,7 @@ void cpplines(FILE* pipe, const char* filename)
             char* token = strtok_r(bufptr, " \t\n", &savepos);
             bufptr = nullptr;
             if (token == nullptr) break;
+            /*const string* str = */string_set::intern (token);
             printf("token %d.%d: [%s]\n",
                    linenr,
                    tokenct,
@@ -99,31 +102,68 @@ void cpplines(FILE* pipe, const char* filename)
 
 int main(int argc, char** argv)
 {
+    int opt;
+    string preProcArgs = "";
+    string filename = argv[argc - 1];
 
-    const char* execname = basename(argv[0]);
-    int exit_status = EXIT_SUCCESS;
-    for(int argi = 1; argi < argc; ++argi)
+    if(!(filename.substr(filename.find_last_of(".") + 1) == "oc")) {
+        cout << "File " + filename + " is not a .oc file! Exiting..." << endl;
+        return EXIT_FAILURE;
+    }
+
+    while( ( opt = getopt (argc, argv, "lyD:@:") ) != -1 )
     {
-        char* filename = argv[argi];
-        string command = CPP + " " + filename;
-        printf("command=\"%s\"\n", command.c_str());
-        FILE* pipe = popen (command.c_str(), "r");
-        if(pipe == nullptr)
+        switch(opt)
         {
-            exit_status = EXIT_FAILURE;
-            fprintf (stderr,
-                     "%s: %s: %s\n",
-                     execname,
-                     command.c_str(),
-                     strerror (errno));
-        }
-        else
-        {
-            cpplines(pipe, filename);
-            int pclose_rc = pclose(pipe);
-            eprint_status(command.c_str(), pclose_rc);
-            if(pclose_rc != 0) exit_status = EXIT_FAILURE;
+            case 'l':
+                //TODO: later
+                break;
+            case 'y':
+                //TODO: later
+                break;
+            case 'D':
+                if(optarg == filename)
+                {
+                    cout << "Flag -D requires a string. Fuck off." << endl;
+                    return EXIT_FAILURE;
+                }
+
+                preProcArgs.append(" -D ");
+                preProcArgs.append(optarg);
+                break;
+            default:
+                break;
         }
     }
-    return exit_status;
+
+    preProcArgs.append(" " + filename);
+    string preProcCommand = CPP + preProcArgs;
+
+    FILE* pipe = popen(preProcCommand.c_str(), "r");
+    int exitStatus = EXIT_SUCCESS;
+    if(pipe == nullptr)
+    {
+        exitStatus = EXIT_FAILURE;
+        string execname = "no";
+        fprintf (stderr,
+                 "%s: %s: %s\n",
+                 execname.c_str(),
+                 preProcCommand.c_str(),
+                 strerror (errno));
+    }
+    else
+    {
+        cpplines(pipe, preProcArgs.c_str());
+        string strFilename = filename;
+        strFilename.erase(strFilename.end()-3, strFilename.end());
+        strFilename.append(".str");
+        FILE *nfile= fopen(strFilename.c_str(), "w+");
+        string_set::dump(nfile);
+        int pclose_rc = pclose(pipe);
+        fclose(nfile);
+        eprint_status(preProcCommand.c_str(), pclose_rc);
+        if(pclose_rc != 0) exitStatus = EXIT_FAILURE;
+    }
+
+    return exitStatus;
 }
