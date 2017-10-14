@@ -63,7 +63,7 @@ void chomp(char* string, char delim)
 
 // Run cpp against the lines of the file.
 void cpplines(FILE* pipe, const char* filename)
-{    
+{
     int linenr = 1;
     char inputname[LINESIZE];
     strcpy(inputname, filename);
@@ -72,7 +72,7 @@ void cpplines(FILE* pipe, const char* filename)
         char* fgets_rc = fgets(buffer, LINESIZE, pipe);
         if(fgets_rc == nullptr) break;
         chomp(buffer, '\n');
-        printf("%s:line %d: [%s]\n", filename, linenr, buffer);
+        //printf("%s:line %d: [%s]\n", filename, linenr, buffer);
         // http://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html
         int sscanf_rc = sscanf(buffer,
                                "# %d \"%[^\"]\"",
@@ -80,7 +80,9 @@ void cpplines(FILE* pipe, const char* filename)
                                inputname);
         if (sscanf_rc == 2)
         {
-            printf ("DIRECTIVE: line %d file \"%s\"\n", linenr, inputname);
+            /*printf ("DIRECTIVE: line %d file \"%s\"\n",
+                    linenr,
+                    inputname);*/
             continue;
         }
         char* savepos = nullptr;
@@ -90,11 +92,13 @@ void cpplines(FILE* pipe, const char* filename)
             char* token = strtok_r(bufptr, " \t\n", &savepos);
             bufptr = nullptr;
             if (token == nullptr) break;
-            /*const string* str = */string_set::intern (token);
-            printf("token %d.%d: [%s]\n",
+            string_set::intern(token);
+
+
+            /*printf("token %d.%d: [%s]\n",
                    linenr,
                    tokenct,
-                   token);
+                   token);*/
         }
         ++linenr;
     }
@@ -107,7 +111,10 @@ int main(int argc, char** argv)
     string filename = argv[argc - 1];
 
     if(!(filename.substr(filename.find_last_of(".") + 1) == "oc")) {
-        cout << "File " + filename + " is not a .oc file! Exiting..." << endl;
+        cout << "File " +
+                filename +
+                " is not a .oc file! Exiting..."
+                << endl;
         return EXIT_FAILURE;
     }
 
@@ -121,10 +128,13 @@ int main(int argc, char** argv)
             case 'y':
                 //TODO: later
                 break;
+            case '@':
+                set_debugflags(optarg);
+                break;
             case 'D':
                 if(optarg == filename)
                 {
-                    cout << "Flag -D requires a string. Fuck off." << endl;
+                    cerr << "Flag -D requires a string." << endl;
                     return EXIT_FAILURE;
                 }
 
@@ -138,8 +148,9 @@ int main(int argc, char** argv)
 
     preProcArgs.append(" " + filename);
     string preProcCommand = CPP + preProcArgs;
+    FILE* pipe = nullptr;
+    pipe = popen(preProcCommand.c_str(), "r");
 
-    FILE* pipe = popen(preProcCommand.c_str(), "r");
     int exitStatus = EXIT_SUCCESS;
     if(pipe == nullptr)
     {
@@ -147,7 +158,7 @@ int main(int argc, char** argv)
         string execname = "no";
         fprintf (stderr,
                  "%s: %s: %s\n",
-                 execname.c_str(),
+                 "basename(argv[0])",
                  preProcCommand.c_str(),
                  strerror (errno));
     }
@@ -159,10 +170,10 @@ int main(int argc, char** argv)
         strFilename.append(".str");
         FILE *nfile= fopen(strFilename.c_str(), "w+");
         string_set::dump(nfile);
-        int pclose_rc = pclose(pipe);
+        int pcloseVal = pclose(pipe);
         fclose(nfile);
-        eprint_status(preProcCommand.c_str(), pclose_rc);
-        if(pclose_rc != 0) exitStatus = EXIT_FAILURE;
+        //eprint_status(preProcCommand.c_str(), pcloseVal);
+        if(pcloseVal != 0) exitStatus = EXIT_FAILURE;
     }
 
     return exitStatus;
