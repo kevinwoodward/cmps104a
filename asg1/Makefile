@@ -4,7 +4,7 @@ VALGRIND   = valgrind --leak-check=full --show-reachable=yes
 
 MKFILE   = Makefile
 DEPFILE  = Makefile.dep
-SOURCES  = string_set.cpp cppstrtok.cpp auxlib.cpp
+SOURCES  = string_set.cpp oc.cpp auxlib.cpp
 HEADERS  = string_set.h auxlib.h
 OBJECTS  = ${SOURCES:.cpp=.o}
 EXECBIN  = oc
