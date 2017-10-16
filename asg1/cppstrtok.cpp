@@ -30,36 +30,6 @@ void chomp(char* string, char delim)
     char* nlpos = string + len - 1;
     if(*nlpos == delim) *nlpos = '\0';
 }
-
-// Print the meaning of a signal.
-// static void eprint_signal (const char* kind, int signal) {
-//    fprintf (stderr, ", %s %d", kind, signal);
-//    const char* sigstr = strsignal (signal);
-//    if (sigstr != nullptr) fprintf (stderr, " %s", sigstr);
-// }
-//
-// // Print the status returned from a subprocess.
-// void eprint_status (const char* command, int status) {
-//    if (status == 0) return;
-//    fprintf (stderr, "%s: status 0x%04X", command, status);
-//    if (WIFEXITED (status)) {
-//       fprintf (stderr, ", exit %d", WEXITSTATUS (status));
-//    }
-//    if (WIFSIGNALED (status)) {
-//       eprint_signal ("Terminated", WTERMSIG (status));
-//       #ifdef WCOREDUMP
-//       if (WCOREDUMP (status)) fprintf (stderr, ", core dumped");
-//       #endif
-//    }
-//    if (WIFSTOPPED (status)) {
-//       eprint_signal ("Stopped", WSTOPSIG (status));
-//    }
-//    if (WIFCONTINUED (status)) {
-//       fprintf (stderr, ", Continued");
-//    }
-//    fprintf (stderr, "\n");
-// }
-
 
 // Run cpp against the lines of the file.
 void cpplines(FILE* pipe, const char* filename)
