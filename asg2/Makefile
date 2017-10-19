@@ -1,47 +1,96 @@
-GCC        = g++-6 -g -O0 -Wall -Wextra -std=gnu++14
-MKDEP      = g++-6 -MM -std=gnu++14
-VALGRIND   = valgrind --leak-check=full --show-reachable=yes
+# $Id: Makefile,v 1.24 2017-10-05 16:39:39-07 - - $
 
-MKFILE   = Makefile
-DEPFILE  = Makefile.dep
-SOURCES  = string_set.cpp cppstrtok.cpp auxlib.cpp
-HEADERS  = string_set.h auxlib.h
-OBJECTS  = ${SOURCES:.cpp=.o}
-EXECBIN  = oc
-SRCFILES = ${HEADERS} ${SOURCES} ${MKFILE}
-LISTING    = Listing.ps
+DEPSFILE  = Makefile.deps
+NOINCLUDE = ci clean spotless
+NEEDINCL  = ${filter ${NOINCLUDE}, ${MAKECMDGOALS}}
+CPP       = g++ -g -O0 -Wall -Wextra -std=gnu++14
+MKDEPS    = g++ -MM -std=gnu++14
+GRIND     = valgrind --leak-check=full --show-reachable=yes
+FLEX      = flex --outfile=${LEXCPP}
+BISON     = bison --defines=${PARSEHDR} --output=${PARSECPP} --xml
+XML2HTML  = xsltproc /usr/share/bison/xslt/xml2xhtml.xsl
+
+MODULES   = astree lyutils string_set auxlib
+HDRSRC    = ${MODULES:=.h}
+CPPSRC    = ${MODULES:=.cpp} oc.cpp
+FLEXSRC   = scanner.l
+BISONSRC  = parser.y
+PARSEHDR  = yyparse.h
+LEXCPP    = yylex.cpp
+PARSECPP  = yyparse.cpp
+CGENS     = ${LEXCPP} ${PARSECPP}
+ALLGENS   = ${PARSEHDR} ${CGENS}
+EXECBIN   = oc
+ALLCSRC   = ${CPPSRC} ${CGENS}
+OBJECTS   = ${ALLCSRC:.cpp=.o}
+LEXOUT    = yylex.output
+PARSEOUT  = yyparse.output
+REPORTS   = ${LEXOUT} ${PARSEOUT}
+MODSRC    = ${foreach MOD, ${MODULES}, ${MOD}.h ${MOD}.cpp}
+MISCSRC   = ${filter-out ${MODSRC}, ${HDRSRC} ${CPPSRC}}
+ALLSRC    = README ${FLEXSRC} ${BISONSRC} ${MODSRC} ${MISCSRC} Makefile
+TESTINS   = ${wildcard test*.in}
+EXECTEST  = ${EXECBIN} -ly
+LISTSRC   = ${ALLSRC} ${DEPSFILE} ${PARSEHDR}
 
 all : ${EXECBIN}
 
 ${EXECBIN} : ${OBJECTS}
-	${GCC} -o${EXECBIN} ${OBJECTS}
+	${CPP} -o${EXECBIN} ${OBJECTS}
+
+yylex.o : yylex.cpp
+	@ # Suppress warning message from flex compilation.
+	${CPP} -Wno-sign-compare -c $<
 
 %.o : %.cpp
-	${GCC} -c $<
+	${CPP} -c $<
 
-ci :
-	cid + ${SRCFILES}
+${LEXCPP} : ${FLEXSRC}
+	${FLEX} ${FLEXSRC}
+
+${PARSECPP} ${PARSEHDR} : ${BISONSRC}
+	${BISON} ${BISONSRC}
+	${XML2HTML} yyparse.xml >yyparse.html
+
+
+ci : ${ALLSRC} ${TESTINS}
+	- checksource ${ALLSRC}
+	- cpplint.py.perl ${CPPSRC}
+	cid + ${ALLSRC} ${TESTINS} test?.inh
+
+lis : ${LISTSRC} tests
+	mkpspdf List.source.ps ${LISTSRC}
+	mkpspdf List.output.ps ${REPORTS} \
+		${foreach test, ${TESTINS:.in=}, \
+		${patsubst %, ${test}.%, in out err log}}
 
 clean :
-	-rm ${OBJECTS} ${DEPFILE}
+	- rm ${OBJECTS} ${ALLGENS} ${REPORTS} ${DEPSFILE} core
+	- rm ${foreach test, ${TESTINS:.in=}, \
+		${patsubst %, ${test}.%, out err log}}
 
 spotless : clean
-	- rm ${EXECBIN} *.str
+	- rm ${EXECBIN} List.*.ps List.*.pdf *.str *.tok
 
-${DEPFILE} :
-	${MKDEP} ${SOURCES} >${DEPFILE}
+deps : ${ALLCSRC}
+	@ echo "# ${DEPSFILE} created `date` by ${MAKE}" >${DEPSFILE}
+	${MKDEPS} ${ALLCSRC} >>${DEPSFILE}
 
-dep :
-	- rm ${DEPFILE}
-	${MAKE} --no-print-directory ${DEPFILE}
+${DEPSFILE} :
+	@ touch ${DEPSFILE}
+	${MAKE} --no-print-directory deps
 
-include ${DEPFILE}
+tests : ${EXECBIN}
+	touch ${TESTINS}
+	make --no-print-directory ${TESTINS:.in=.out}
 
-test : ${EXECBIN}
-	${EXECBIN} * * * >test.out 2>&1
+%.out %.err : %.in
+	${GRIND} --log-file=$*.log ${EXECTEST} $< 1>$*.out 2>$*.err; \
+	echo EXIT STATUS = $$? >>$*.log
 
-lis : test
-	mkpspdf Listing.ps ${SRCFILES} ${DEPFILE} test.out
+again :
+	gmake --no-print-directory spotless deps ci all lis
 
-again : ${SRCFILES}
-	make --no-print-directory spotless dep ci test lis
+ifeq "${NEEDINCL}" ""
+include ${DEPSFILE}
+endif
