@@ -7,8 +7,8 @@
 #define YY_USER_ACTION  { lexer::advance(); }
 
 int yylval_token (int symbol) {
-   yylval = new astree (symbol, lexer::lloc, yytext);
-   return symbol;
+    yylval = new astree (symbol, lexer::lloc, yytext);
+    return symbol;
 }
 
 %}
@@ -78,15 +78,15 @@ INVCHARCONST    ('[^\n]*)
 "}"             { return yylval_token ('}'); }
 "[]"            { return yylval_token (TOK_NEWARRAY); }
 
-{INTCONST}          { return yylval_token (INTCONST); }
-{CHARCONST}         { return yylval_token (CHARCONST); }
-{STRINGCONST}       { return yylval_token (STRINGCONST); }
-{IDENT}             { return yylval_token (IDENT); }
+{INTCONST}          { return yylval_token (TOK_INTCON); }
+{CHARCONST}         { return yylval_token (TOK_CHARCON); }
+{STRINGCONST}       { return yylval_token (TOK_STRINGCON); }
+{IDENT}             { return yylval_token (TOK_IDENT); }
 
-/*
-{NOTNUMBER}     { lexer::badtoken (yytext);
-                  return yylval_token (NUMBER); }
-*/
+
+
+{INVSTRINGCONST}      { lexer::badtoken (yytext); }
+{INVCHARCONST}      { lexer::badtoken (yytext); }
 {INVIDENT}      { lexer::badtoken (yytext); }
 .               { lexer::badchar (*yytext); }
 
