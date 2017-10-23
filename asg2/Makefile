@@ -3,8 +3,8 @@
 DEPSFILE  = Makefile.deps
 NOINCLUDE = ci clean spotless
 NEEDINCL  = ${filter ${NOINCLUDE}, ${MAKECMDGOALS}}
-CPP       = g++ -g -O0 -Wall -Wextra -std=gnu++14
-MKDEPS    = g++ -MM -std=gnu++14
+CPP       = g++-6 -g -O0 -Wall -Wextra -std=gnu++14
+MKDEPS    = g++-6 -MM -std=gnu++14
 GRIND     = valgrind --leak-check=full --show-reachable=yes
 FLEX      = flex --outfile=${LEXCPP}
 BISON     = bison --defines=${PARSEHDR} --output=${PARSECPP} --xml

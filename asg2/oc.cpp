@@ -18,9 +18,13 @@ using namespace std;
 
 #include "auxlib.h"
 #include "string_set.h"
+//#include "yyparse.cpp"
+#include "lyutils.h"
 
 const string CPP = "/usr/bin/cpp -nostdinc ";
 constexpr size_t LINESIZE = 1024;
+//extern FILE* yyin;
+extern FILE* token_file;
 
 // Chomp the last character from a buffer if it is delim.
 void chomp(char* string, char delim)
@@ -37,7 +41,15 @@ void cpplines(FILE* pipe, const char* filename)
     int linenr = 1;
     char inputname[LINESIZE];
     strcpy(inputname, filename);
+
+    int token_iter;
+    while ((token_iter = yylex()) != 0)
+    {
+        //sick
+    }
+
     for (;;) {
+        break;
         char buffer[LINESIZE];
         char* fgets_rc = fgets(buffer, LINESIZE, pipe);
         if(fgets_rc == nullptr) break;
@@ -55,23 +67,29 @@ void cpplines(FILE* pipe, const char* filename)
                     inputname);*/
             continue;
         }
-        char* savepos = nullptr;
-        char* bufptr = buffer;
-        for (int tokenct = 1;; ++tokenct)
-        {
-            char* token = strtok_r(bufptr, " \t\n", &savepos);
-            bufptr = nullptr;
-            if (token == nullptr) break;
-            string_set::intern(token);
+        //char* savepos = nullptr;
+        //char* bufptr = buffer;
 
 
-            /*printf("token %d.%d: [%s]\n",
-                   linenr,
-                   tokenct,
-                   token);*/
-        }
+
+
+        // for (int tokenct = 1;; ++tokenct)
+        // {
+        //     char* token = strtok_r(bufptr, " \t\n", &savepos);
+        //     bufptr = nullptr;
+        //     if (token == nullptr) break;
+        //     string_set::intern(token);
+        //
+        //
+        //     /*printf("token %d.%d: [%s]\n",
+        //            linenr,
+        //            tokenct,
+        //            token);*/
+        // }
         ++linenr;
     }
+
+
 }
 
 int main(int argc, char** argv)
@@ -118,14 +136,19 @@ int main(int argc, char** argv)
 
     preProcArgs.append(" " + filename);
     string preProcCommand = CPP + preProcArgs;
-    FILE* pipe = nullptr;
-    pipe = popen(preProcCommand.c_str(), "r");
+    //FILE* pipe = nullptr;
+    yyin = popen(preProcCommand.c_str(), "r");
+
+    string tokFilename = filename;
+    tokFilename.erase(tokFilename.end()-3, tokFilename.end());
+    tokFilename.append(".tok");
+    token_file = fopen(tokFilename.c_str(), "w");
 
     int exitStatus = EXIT_SUCCESS;
-    if(pipe == nullptr)
+    if(yyin == nullptr)
     {
         exitStatus = EXIT_FAILURE;
-        string execname = "no";
+        string exname = "no";
         fprintf (stderr,
                  "%s: %s: %s\n",
                  "basename(argv[0])",
@@ -134,13 +157,14 @@ int main(int argc, char** argv)
     }
     else
     {
-        cpplines(pipe, preProcArgs.c_str());
+        cpplines(yyin, preProcArgs.c_str());
+        fclose(token_file);
         string strFilename = filename;
         strFilename.erase(strFilename.end()-3, strFilename.end());
         strFilename.append(".str");
         FILE *nfile= fopen(strFilename.c_str(), "w+");
         string_set::dump(nfile);
-        int pcloseVal = pclose(pipe);
+        int pcloseVal = pclose(yyin);
         fclose(nfile);
         //eprint_status(preProcCommand.c_str(), pcloseVal);
         if(pcloseVal != 0) exitStatus = EXIT_FAILURE;

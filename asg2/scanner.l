@@ -8,6 +8,9 @@
 
 int yylval_token (int symbol) {
     yylval = new astree (symbol, lexer::lloc, yytext);
+    fprintf(token_file, "%zd %2zd.%.03zd  %-3d  %-15s (%s)\n",
+       lexer::lloc.filenr, lexer::lloc.linenr,
+       lexer::lloc.offset, symbol, parser::get_tname(symbol), yytext);
     return symbol;
 }
 
@@ -29,8 +32,8 @@ CHARCONST       ('([^\\'\n]|\\[\\'"0nt])')
 STRINGCONST     (\"([^\\"\n]|\\[\\'"0nt])*\")
 IDENT           ({LETTER}({LETTER}|{DIGIT})*)
 INVIDENT        ({DIGIT}({LETTER}|{DIGIT})*)
-INVSTRINGCONST  (\"[^\n]*)
-INVCHARCONST    ('[^\n]*)
+INVSTRINGCONST  ((\"[^\"]*)|(\".*\\[^nt0].*\"))
+INVCHARCONST    ('[^\n']*)
 
 
 

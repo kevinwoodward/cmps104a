@@ -15,12 +15,12 @@ using namespace std;
 #include "auxlib.h"
 
 #define YYEOF 0
-
+extern FILE* token_file;
 extern FILE* yyin;
-extern char* yytext; 
+extern char* yytext;
 extern int yy_flex_debug;
 extern int yydebug;
-extern size_t yyleng; 
+extern size_t yyleng;
 
 int yylex();
 int yylex_destroy();
@@ -51,4 +51,3 @@ typedef astree* YYSTYPE;
 #include "yyparse.h"
 
 #endif
-

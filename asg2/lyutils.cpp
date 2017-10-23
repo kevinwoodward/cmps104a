@@ -9,6 +9,8 @@
 #include "auxlib.h"
 #include "lyutils.h"
 
+FILE* token_file;
+
 bool lexer::interactive = true;
 location lexer::lloc = {0, 1, 0};
 size_t lexer::last_yyleng = 0;
@@ -76,4 +78,3 @@ void yyerror (const char* message) {
    assert (not lexer::filenames.empty());
    errllocprintf (lexer::lloc, "%s\n", message);
 }
-
