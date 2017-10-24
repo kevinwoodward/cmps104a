@@ -8,7 +8,7 @@
 
 int yylval_token (int symbol) {
     yylval = new astree (symbol, lexer::lloc, yytext);
-    fprintf(token_file, "%zd %2zd.%.03zd  %-3d  %-15s (%s)\n",
+    fprintf(token_file, "%3zd %2zd.%.03zd  %-3d  %-15s (%s)\n",
        lexer::lloc.filenr, lexer::lloc.linenr,
        lexer::lloc.offset, symbol, parser::get_tname(symbol), yytext);
     return symbol;
@@ -89,10 +89,10 @@ INVCHARCONST    ('[^\n']*)
 {IDENT}             { return yylval_token (TOK_IDENT); }
 
 
-{INVIDENT}      { lexer::badtoken (yytext); }
-{INVSTRINGCONST}      { lexer::badtoken (yytext); }
+{INVIDENT}          { lexer::badtoken (yytext); }
+{INVSTRINGCONST}    { lexer::badtoken (yytext); }
 {INVCHARCONST}      { lexer::badtoken (yytext); }
-.               { lexer::badchar (*yytext); }
+.                   { lexer::badchar (*yytext); }
 
 
 %%

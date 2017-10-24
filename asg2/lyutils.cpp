@@ -71,6 +71,7 @@ void lexer::include() {
       }
       lexer::lloc.linenr = linenr - 1;
       lexer::newfilename (filename);
+      fprintf(token_file, "# %zd %s\n", linenr, filename);
    }
 }
 
