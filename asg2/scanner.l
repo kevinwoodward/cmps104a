@@ -32,7 +32,7 @@ CHARCONST       ('([^\\'\n]|\\[\\'"0nt])')
 STRINGCONST     (\"([^\\"\n]|\\[\\'"0nt])*\")
 IDENT           ({LETTER}({LETTER}|{DIGIT})*)
 INVIDENT        ({DIGIT}({LETTER}|{DIGIT})*)
-INVSTRINGCONST  ((\"[^\"]*)|(\".*\\[^nt0].*\"))
+INVSTRINGCONST  ((\"[^\"]*)|(\".*\\[^\\'"nt0].*\"))
 INVCHARCONST    ('[^\n']*)
 
 
@@ -89,10 +89,9 @@ INVCHARCONST    ('[^\n']*)
 {IDENT}             { return yylval_token (TOK_IDENT); }
 
 
-
+{INVIDENT}      { lexer::badtoken (yytext); }
 {INVSTRINGCONST}      { lexer::badtoken (yytext); }
 {INVCHARCONST}      { lexer::badtoken (yytext); }
-{INVIDENT}      { lexer::badtoken (yytext); }
 .               { lexer::badchar (*yytext); }
 
 
