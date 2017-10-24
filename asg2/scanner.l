@@ -55,6 +55,8 @@ INVCHARCONST    ('[^\n']*)
 "string"        { return yylval_token (TOK_STRING); }
 "struct"        { return yylval_token (TOK_STRUCT); }
 "void"          { return yylval_token (TOK_VOID); }
+"new"           { return yylval_token (TOK_NEW); }
+"null"          { return yylval_token (TOK_NULL); }
 
 
 "+"             { return yylval_token ('+'); }

@@ -94,6 +94,9 @@ void cpplines(FILE* pipe, const char* filename)
 
 int main(int argc, char** argv)
 {
+    exec::execname = basename(argv[0]);
+    yy_flex_debug = 0;
+
     int opt;
     string preProcArgs = "";
     string filename = argv[argc - 1];
@@ -111,7 +114,7 @@ int main(int argc, char** argv)
         switch(opt)
         {
             case 'l':
-                //TODO: later
+                yy_flex_debug = 1;
                 break;
             case 'y':
                 //TODO: later
