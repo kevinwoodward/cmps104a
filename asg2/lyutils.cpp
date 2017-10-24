@@ -50,11 +50,13 @@ void lexer::badchar (unsigned char bad) {
              isgraph (bad) ? "%c" : "\\%03o", bad);
    errllocprintf (lexer::lloc, "invalid source character (%s)\n",
                   buffer);
+   exec::exit_status = EXIT_FAILURE;
 }
 
 
 void lexer::badtoken (char* lexeme) {
    errllocprintf (lexer::lloc, "invalid token (%s)\n", lexeme);
+   exec::exit_status = EXIT_FAILURE;
 }
 
 void lexer::include() {
