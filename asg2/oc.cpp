@@ -147,10 +147,10 @@ int main(int argc, char** argv)
     tokFilename.append(".tok");
     token_file = fopen(tokFilename.c_str(), "w");
 
-    int exitStatus = EXIT_SUCCESS;
+    //int exitStatus = EXIT_SUCCESS;
     if(yyin == nullptr)
     {
-        exitStatus = EXIT_FAILURE;
+        exec::exit_status = EXIT_FAILURE;
         string exname = "no";
         fprintf (stderr,
                  "%s: %s: %s\n",
@@ -170,8 +170,8 @@ int main(int argc, char** argv)
         int pcloseVal = pclose(yyin);
         fclose(nfile);
         //eprint_status(preProcCommand.c_str(), pcloseVal);
-        if(pcloseVal != 0) exitStatus = EXIT_FAILURE;
+        if(pcloseVal != 0) exec::exit_status = EXIT_FAILURE;
     }
 
-    return exitStatus;
+    return exec::exit_status;
 }
