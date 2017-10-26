@@ -1,4 +1,5 @@
-// $Id: lyutils.h,v 1.6 2017-10-05 16:39:39-07 - - $
+// Jose Sepulveda, joasepul@ucsc.edu
+// Kevin Woodward, keawoodw@ucsc.edu
 
 #ifndef __UTILS_H__
 #define __UTILS_H__

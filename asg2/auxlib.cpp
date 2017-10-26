@@ -1,4 +1,5 @@
-// $Id: auxlib.cpp,v 1.5 2017-10-11 14:28:23-07 - - $
+// Jose Sepulveda, joasepul@ucsc.edu
+// Kevin Woodward, keawoodw@ucsc.edu
 
 #include <assert.h>
 #include <errno.h>
@@ -25,7 +26,7 @@ static void eprint_signal (const char* kind, int signal) {
 }
 
 void eprint_status (const char* command, int status) {
-   if (status == 0) return; 
+   if (status == 0) return;
    eprintf ("%s: status 0x%04X", command, status);
    if (WIFEXITED (status)) {
       eprintf (", exit %d", WEXITSTATUS (status));
@@ -85,7 +86,7 @@ void __stubprintf (const char* file, int line, const char* func,
    vprintf (format, args);
    va_end (args);
    fflush (nullptr);
-}     
+}
 
 
 void set_debugflags (const char* flags) {
@@ -112,4 +113,3 @@ void __debugprintf (char flag, const char* file, int line,
    va_end (args);
    fflush (nullptr);
 }
-

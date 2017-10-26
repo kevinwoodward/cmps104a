@@ -1,4 +1,5 @@
-// $Id: astree.h,v 1.7 2016-10-06 16:13:39-07 - - $
+// Jose Sepulveda, joasepul@ucsc.edu
+// Kevin Woodward, keawoodw@ucsc.edu
 
 #ifndef __ASTREE_H__
 #define __ASTREE_H__
@@ -39,4 +40,3 @@ void destroy (astree* tree1, astree* tree2 = nullptr);
 void errllocprintf (const location&, const char* format, const char*);
 
 #endif
-

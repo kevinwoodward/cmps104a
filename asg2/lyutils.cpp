@@ -1,4 +1,5 @@
-// $Id: lyutils.cpp,v 1.3 2016-10-06 16:42:35-07 - - $
+// Jose Sepulveda, joasepul@ucsc.edu
+// Kevin Woodward, keawoodw@ucsc.edu
 
 #include <assert.h>
 #include <ctype.h>

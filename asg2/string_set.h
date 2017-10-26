@@ -1,4 +1,5 @@
-// $Id: string_set.h,v 1.1 2016-10-06 16:15:22-07 - - $
+// Jose Sepulveda, joasepul@ucsc.edu
+// Kevin Woodward, keawoodw@ucsc.edu
 
 #ifndef __STRING_SET__
 #define __STRING_SET__
@@ -17,4 +18,3 @@ struct string_set {
 };
 
 #endif
-

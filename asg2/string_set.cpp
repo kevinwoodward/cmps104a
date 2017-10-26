@@ -1,4 +1,5 @@
-// $Id: string_set.cpp,v 1.3 2017-10-11 14:24:08-07 - - $
+// Jose Sepulveda, joasepul@ucsc.edu
+// Kevin Woodward, keawoodw@ucsc.edu
 
 #include <string>
 #include <unordered_set>
@@ -9,7 +10,7 @@ using namespace std;
 
 unordered_set<string> string_set::set;
 
-string_set::string_set() {    
+string_set::string_set() {
    set.max_load_factor (0.5);
 }
 

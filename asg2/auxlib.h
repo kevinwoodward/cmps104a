@@ -1,4 +1,5 @@
-// $Id: auxlib.h,v 1.10 2017-10-11 14:33:32-07 - - $
+// Jose Sepulveda, joasepul@ucsc.edu
+// Kevin Woodward, keawoodw@ucsc.edu
 
 #ifndef __AUXLIB_H__
 #define __AUXLIB_H__
@@ -23,7 +24,7 @@ struct exec {
 };
 
 void veprintf (const char* format, va_list args);
-// Prints a message to stderr using the vector form of 
+// Prints a message to stderr using the vector form of
 // argument list.
 
 void eprintf (const char* format, ...);
@@ -86,4 +87,3 @@ void __debugprintf (char flag, const char* file, int line,
 #endif
 
 #endif
-
