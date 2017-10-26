@@ -117,7 +117,7 @@ int main(int argc, char** argv)
                 yy_flex_debug = 1;
                 break;
             case 'y':
-                //TODO: later
+                yydebug = 1;
                 break;
             case '@':
                 set_debugflags(optarg);
