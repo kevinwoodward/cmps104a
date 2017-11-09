@@ -31,6 +31,16 @@
 
 %%
 
+start    : program            { yyparse_astree = $1; }
+         ;
+program  : program structdef  { $$ = $1->adopt ($2); }
+         | program function   { $$ = $1->adopt ($2); }
+         | program statement  { $$ = $1->adopt ($2); }
+         | program error '}'  { $$ = $1; }
+         | program error ';'  { $$ = $1; }
+         |                    { $$ = parser::root; }
+         ;     
+
 program : program token | ;
 token   : '(' | ')' | '[' | ']' | '{' | '}' | ';' | ',' | '.'
         | '=' | '+' | '-' | '*' | '/' | '%' | '!'
