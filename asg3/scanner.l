@@ -84,7 +84,7 @@ INVCHARCONST    ('[^\n']*)
 "]"             { return yylval_token (']'); }
 "{"             { return yylval_token ('{'); }
 "}"             { return yylval_token ('}'); }
-"[]"            { return yylval_token (TOK_NEWARRAY); }
+"[]"            { return yylval_token (TOK_ARRAY); }
 
 {INTCONST}          { return yylval_token (TOK_INTCON); }
 {CHARCONST}         { return yylval_token (TOK_CHARCON); }

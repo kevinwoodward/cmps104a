@@ -51,13 +51,75 @@ program  : program structdef  { $$ = $1->adopt ($2); }
          |                    { $$ = parser::root; }
          ;
 
-structdef  : TOK_STRUCT TOK_TYPEID '{' '}'  { destroy ($3, $4); $$ = $1->adopt($2);}
-           | TOK_STRUCT TOK_TYPEID '{' fielddecl_seq '}'  { destroy ($2, $5); $$ = $1->adopt($2,$4); }
-		   ;
+structdef : TOK_STRUCT TOK_IDENT '{' '}'
+                {
+                    destroy ($3, $4);
+                    $2->symbol = TOK_TYPEID;
+                    $$ = $1->adopt($2);
+                }
+          | TOK_STRUCT TOK_IDENT '{' fielddecl_seq '}'
+                {
+                    destroy ($3, $5);
+                    $2->symbol = TOK_TYPEID;
+                    $$ = $1->adopt($2,$4);
+                }
+		  ;
 
-fielddecl_seq : fielddecl_seq fielddecl ';'  { destroy($3); $$ = $1->adopt($2); }
+fielddecl_seq : fielddecl_seq fielddecl ';'
+                {
+                    destroy($3);
+                    $$ = $1->adopt($2);
+                }
               |
 			  ;
+
+fielddecl   : basetype TOK_IDENT
+                {
+                    $2->symbol = TOK_FIELD;
+                    $$ = $1->adopt($2);
+                }
+            | basetype TOK_ARRAY TOK_IDENT
+                {
+                    $2->symbol = TOK_FIELD;
+                    $$ = $2->adopt($1, $2);
+                }
+            ;
+basetype
+    : TOK_VOID
+    | TOK_INT
+    | TOK_STRING
+    | TOK_IDENT
+        {
+            $1->symbol = TOK_TYPEID;
+            $$ = $1;
+        }
+    ;
+
+function
+    : identdecl '(' ')' block
+        {
+            //need to synthesize TOK_FUNCTION
+            //or TOK_PROTOTYPE
+        }
+    | identdecl '(' function_args ')' block
+        {
+
+        }
+    ;
+
+function_args
+    : function_args ',' identdecl
+        {
+            destroy($2);
+            $$ = $1->adopt($3);
+        }
+    | identdecl
+    ;
+
+block
+    : '{' statement_seq '}'
+    | ';'
+    ;
 
 expr    : expr '=' expr         { $$ = $2->adopt ($1, $3); }
         | expr '+' expr         { $$ = $2->adopt ($1, $3); }
@@ -70,7 +132,7 @@ expr    : expr '=' expr         { $$ = $2->adopt ($1, $3); }
         | allocator             { $$ = $1; }
         | call                  { $$ = $1; }
         | '(' expr ')'          { destroy ($1, $3); $$ = $2; }
-        | variable                 { $$ = $1; }
+        | variable                { $$ = $1; }
         | constant                { $$ = $1; }
         ;
 
