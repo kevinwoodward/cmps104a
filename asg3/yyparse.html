@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:bison="http://www.gnu.org/software/bison/">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>parser.y - GNU Bison XML Automaton Report</title>
+    <style type="text/css">
+      body {
+        font-family: "Nimbus Sans L", Arial, sans-serif;
+        font-size: 9pt;
+      }
+      a:link {
+        color: #1f00ff;
+        text-decoration: none;
+      }
+      a:visited {
+        color: #1f00ff;
+        text-decoration: none;
+      }
+      a:hover {
+        color: red;
+      }
+      #menu a {
+        text-decoration: underline;
+      }
+      .i {
+        font-style: italic;
+      }
+      .pre {
+        font-family: monospace;
+        white-space: pre;
+      }
+      ol.decimal {
+        list-style-type: decimal;
+      }
+      ol.lower-alpha {
+        list-style-type: lower-alpha;
+      }
+      .point {
+        color: #cc0000;
+      }
+      #footer {
+        margin-top: 3.5em;
+        font-size: 7pt;
+      }
+      </style>
+  </head>
+  <body><h1>GNU Bison XML Automaton Report</h1><p>
+    input grammar: <span class="i">parser.y</span></p>
+
+<h3>Table of Contents</h3><ul id="menu"><li><a href="#reductions">Reductions</a><ul class="lower-alpha"><li><a href="#nonterminals_useless_in_grammar">Nonterminals useless in grammar</a></li><li><a href="#terminals_unused_in_grammar">Terminals unused in grammar</a></li><li><a href="#rules_useless_in_grammar">Rules useless in grammar</a></li></ul></li><li><a href="#conflicts">Conflicts</a></li><li><a href="#grammar">Grammar</a><ul class="lower-alpha"><li><a href="#grammar">Itemset</a></li><li><a href="#terminals">Terminal symbols</a></li><li><a href="#nonterminals">Nonterminal symbols</a></li></ul></li><li><a href="#automaton">Automaton</a></li></ul><h2><a name="reductions" id="reductions"></a> Reductions</h2><h3><a name="nonterminals_useless_in_grammar" id="nonterminals_useless_in_grammar"></a> Nonterminals useless in grammar</h3>
+
+<h3><a name="terminals_unused_in_grammar" id="terminals_unused_in_grammar"></a> Terminals unused in grammar</h3>
+
+<p class="pre">   TOK_BLOCK
+   TOK_CALL
+   TOK_IFELSE
+   TOK_INITDECL
+   TOK_POS
+   TOK_NEG
+   TOK_NEWARRAY
+   TOK_TYPEID
+   TOK_FIELD
+
+
+</p><h3><a name="rules_useless_in_grammar" id="rules_useless_in_grammar"></a> Rules useless in grammar</h3>
+<h2><a name="conflicts" id="conflicts"></a> Conflicts</h2>
+
+<h2><a name="grammar" id="grammar"></a> Grammar</h2>
+<p class="pre">
+<a name="rule_0" id="rule_0"></a>    0 <span class="i">$accept</span> → <span class="i">program</span> <b>$end</b>
+
+<a name="rule_1" id="rule_1"></a>    1 <span class="i">program</span> → <span class="i">program</span> <span class="i">token</span>
+<a name="rule_2" id="rule_2"></a>    2         | %empty
+
+<a name="rule_3" id="rule_3"></a>    3 <span class="i">token</span> → <b>'('</b>
+<a name="rule_4" id="rule_4"></a>    4       | <b>')'</b>
+<a name="rule_5" id="rule_5"></a>    5       | <b>'['</b>
+<a name="rule_6" id="rule_6"></a>    6       | <b>']'</b>
+<a name="rule_7" id="rule_7"></a>    7       | <b>'{'</b>
+<a name="rule_8" id="rule_8"></a>    8       | <b>'}'</b>
+<a name="rule_9" id="rule_9"></a>    9       | <b>';'</b>
+<a name="rule_10" id="rule_10"></a>   10       | <b>','</b>
+<a name="rule_11" id="rule_11"></a>   11       | <b>'.'</b>
+<a name="rule_12" id="rule_12"></a>   12       | <b>'='</b>
+<a name="rule_13" id="rule_13"></a>   13       | <b>'+'</b>
+<a name="rule_14" id="rule_14"></a>   14       | <b>'-'</b>
+<a name="rule_15" id="rule_15"></a>   15       | <b>'*'</b>
+<a name="rule_16" id="rule_16"></a>   16       | <b>'/'</b>
+<a name="rule_17" id="rule_17"></a>   17       | <b>'%'</b>
+<a name="rule_18" id="rule_18"></a>   18       | <b>'!'</b>
+<a name="rule_19" id="rule_19"></a>   19       | <b>TOK_VOID</b>
+<a name="rule_20" id="rule_20"></a>   20       | <b>TOK_CHAR</b>
+<a name="rule_21" id="rule_21"></a>   21       | <b>TOK_INT</b>
+<a name="rule_22" id="rule_22"></a>   22       | <b>TOK_STRING</b>
+<a name="rule_23" id="rule_23"></a>   23       | <b>TOK_IF</b>
+<a name="rule_24" id="rule_24"></a>   24       | <b>TOK_ELSE</b>
+<a name="rule_25" id="rule_25"></a>   25       | <b>TOK_WHILE</b>
+<a name="rule_26" id="rule_26"></a>   26       | <b>TOK_RETURN</b>
+<a name="rule_27" id="rule_27"></a>   27       | <b>TOK_STRUCT</b>
+<a name="rule_28" id="rule_28"></a>   28       | <b>TOK_NULL</b>
+<a name="rule_29" id="rule_29"></a>   29       | <b>TOK_NEW</b>
+<a name="rule_30" id="rule_30"></a>   30       | <b>TOK_ARRAY</b>
+<a name="rule_31" id="rule_31"></a>   31       | <b>TOK_EQ</b>
+<a name="rule_32" id="rule_32"></a>   32       | <b>TOK_NE</b>
+<a name="rule_33" id="rule_33"></a>   33       | <b>TOK_LT</b>
+<a name="rule_34" id="rule_34"></a>   34       | <b>TOK_LE</b>
+<a name="rule_35" id="rule_35"></a>   35       | <b>TOK_GT</b>
+<a name="rule_36" id="rule_36"></a>   36       | <b>TOK_GE</b>
+<a name="rule_37" id="rule_37"></a>   37       | <b>TOK_IDENT</b>
+<a name="rule_38" id="rule_38"></a>   38       | <b>TOK_INTCON</b>
+<a name="rule_39" id="rule_39"></a>   39       | <b>TOK_CHARCON</b>
+<a name="rule_40" id="rule_40"></a>   40       | <b>TOK_STRINGCON</b>
+<a name="rule_41" id="rule_41"></a>   41       | <b>TOK_ORD</b>
+<a name="rule_42" id="rule_42"></a>   42       | <b>TOK_CHR</b>
+<a name="rule_43" id="rule_43"></a>   43       | <b>TOK_ROOT</b>
+</p>
+
+<h3><a name="terminals" id="terminals"></a> Terminals, with rules where they appear</h3>
+
+<p class="pre"><b>$end</b> (0) <a href="#rule_0">0</a>
+<b>'!'</b> (33) <a href="#rule_18">18</a>
+<b>'%'</b> (37) <a href="#rule_17">17</a>
+<b>'('</b> (40) <a href="#rule_3">3</a>
+<b>')'</b> (41) <a href="#rule_4">4</a>
+<b>'*'</b> (42) <a href="#rule_15">15</a>
+<b>'+'</b> (43) <a href="#rule_13">13</a>
+<b>','</b> (44) <a href="#rule_10">10</a>
+<b>'-'</b> (45) <a href="#rule_14">14</a>
+<b>'.'</b> (46) <a href="#rule_11">11</a>
+<b>'/'</b> (47) <a href="#rule_16">16</a>
+<b>';'</b> (59) <a href="#rule_9">9</a>
+<b>'='</b> (61) <a href="#rule_12">12</a>
+<b>'['</b> (91) <a href="#rule_5">5</a>
+<b>']'</b> (93) <a href="#rule_6">6</a>
+<b>'{'</b> (123) <a href="#rule_7">7</a>
+<b>'}'</b> (125) <a href="#rule_8">8</a>
+<b>error</b> (256)
+<b>TOK_VOID</b> (258) <a href="#rule_19">19</a>
+<b>TOK_CHAR</b> (259) <a href="#rule_20">20</a>
+<b>TOK_INT</b> (260) <a href="#rule_21">21</a>
+<b>TOK_STRING</b> (261) <a href="#rule_22">22</a>
+<b>TOK_IF</b> (262) <a href="#rule_23">23</a>
+<b>TOK_ELSE</b> (263) <a href="#rule_24">24</a>
+<b>TOK_WHILE</b> (264) <a href="#rule_25">25</a>
+<b>TOK_RETURN</b> (265) <a href="#rule_26">26</a>
+<b>TOK_STRUCT</b> (266) <a href="#rule_27">27</a>
+<b>TOK_NULL</b> (267) <a href="#rule_28">28</a>
+<b>TOK_NEW</b> (268) <a href="#rule_29">29</a>
+<b>TOK_ARRAY</b> (269) <a href="#rule_30">30</a>
+<b>TOK_EQ</b> (270) <a href="#rule_31">31</a>
+<b>TOK_NE</b> (271) <a href="#rule_32">32</a>
+<b>TOK_LT</b> (272) <a href="#rule_33">33</a>
+<b>TOK_LE</b> (273) <a href="#rule_34">34</a>
+<b>TOK_GT</b> (274) <a href="#rule_35">35</a>
+<b>TOK_GE</b> (275) <a href="#rule_36">36</a>
+<b>TOK_IDENT</b> (276) <a href="#rule_37">37</a>
+<b>TOK_INTCON</b> (277) <a href="#rule_38">38</a>
+<b>TOK_CHARCON</b> (278) <a href="#rule_39">39</a>
+<b>TOK_STRINGCON</b> (279) <a href="#rule_40">40</a>
+<b>TOK_BLOCK</b> (280)
+<b>TOK_CALL</b> (281)
+<b>TOK_IFELSE</b> (282)
+<b>TOK_INITDECL</b> (283)
+<b>TOK_POS</b> (284)
+<b>TOK_NEG</b> (285)
+<b>TOK_NEWARRAY</b> (286)
+<b>TOK_TYPEID</b> (287)
+<b>TOK_FIELD</b> (288)
+<b>TOK_ORD</b> (289) <a href="#rule_41">41</a>
+<b>TOK_CHR</b> (290) <a href="#rule_42">42</a>
+<b>TOK_ROOT</b> (291) <a href="#rule_43">43</a>
+</p>
+
+<h3><a name="nonterminals" id="nonterminals"></a> Nonterminals, with rules where they appear</h3>
+
+<p class="pre"><b>$accept</b> (53)
+    on left: <a href="#rule_0">0</a>
+<b>program</b> (54)
+    on left: <a href="#rule_1">1</a> <a href="#rule_2">2</a>
+    on right: <a href="#rule_0">0</a> <a href="#rule_1">1</a>
+<b>token</b> (55)
+    on left: <a href="#rule_3">3</a> <a href="#rule_4">4</a> <a href="#rule_5">5</a> <a href="#rule_6">6</a> <a href="#rule_7">7</a> <a href="#rule_8">8</a> <a href="#rule_9">9</a> <a href="#rule_10">10</a> <a href="#rule_11">11</a> <a href="#rule_12">12</a> <a href="#rule_13">13</a> <a href="#rule_14">14</a> <a href="#rule_15">15</a> <a href="#rule_16">16</a> <a href="#rule_17">17</a> <a href="#rule_18">18</a> <a href="#rule_19">19</a> <a href="#rule_20">20</a> <a href="#rule_21">21</a> <a href="#rule_22">22</a> <a href="#rule_23">23</a> <a href="#rule_24">24</a> <a href="#rule_25">25</a> <a href="#rule_26">26</a> <a href="#rule_27">27</a> <a href="#rule_28">28</a> <a href="#rule_29">29</a> <a href="#rule_30">30</a> <a href="#rule_31">31</a> <a href="#rule_32">32</a> <a href="#rule_33">33</a> <a href="#rule_34">34</a> <a href="#rule_35">35</a> <a href="#rule_36">36</a> <a href="#rule_37">37</a> <a href="#rule_38">38</a> <a href="#rule_39">39</a> <a href="#rule_40">40</a> <a href="#rule_41">41</a> <a href="#rule_42">42</a> <a href="#rule_43">43</a>
+    on right: <a href="#rule_1">1</a>
+</p><h2><a name="automaton" id="automaton"></a> Automaton</h2>
+
+<h3><a name="state_0" id="state_0"></a>state 0</h3>
+
+<p class="pre">  <a href="#rule_0">  0</a> <span class="i">$accept</span> → <span class="point">.</span> <span class="i">program</span> <b>$end</b>
+  <a href="#rule_1">  1</a> <span class="i">program</span> → <span class="point">.</span> <span class="i">program</span> <span class="i">token</span>
+  <a href="#rule_2">  2</a>         | <span class="point">.</span> %empty
+
+    $default  <a href="#rule_2">reduce using rule 2</a> (program)
+
+    program  <a href="#state_1">go to state 1</a>
+</p>
+
+<h3><a name="state_1" id="state_1"></a>state 1</h3>
+
+<p class="pre">  <a href="#rule_0">  0</a> <span class="i">$accept</span> → <span class="i">program</span> <span class="point">.</span> <b>$end</b>
+  <a href="#rule_1">  1</a> <span class="i">program</span> → <span class="i">program</span> <span class="point">.</span> <span class="i">token</span>
+  <a href="#rule_3">  3</a> <span class="i">token</span> → <span class="point">.</span> <b>'('</b>
+  <a href="#rule_4">  4</a>       | <span class="point">.</span> <b>')'</b>
+  <a href="#rule_5">  5</a>       | <span class="point">.</span> <b>'['</b>
+  <a href="#rule_6">  6</a>       | <span class="point">.</span> <b>']'</b>
+  <a href="#rule_7">  7</a>       | <span class="point">.</span> <b>'{'</b>
+  <a href="#rule_8">  8</a>       | <span class="point">.</span> <b>'}'</b>
+  <a href="#rule_9">  9</a>       | <span class="point">.</span> <b>';'</b>
+  <a href="#rule_10"> 10</a>       | <span class="point">.</span> <b>','</b>
+  <a href="#rule_11"> 11</a>       | <span class="point">.</span> <b>'.'</b>
+  <a href="#rule_12"> 12</a>       | <span class="point">.</span> <b>'='</b>
+  <a href="#rule_13"> 13</a>       | <span class="point">.</span> <b>'+'</b>
+  <a href="#rule_14"> 14</a>       | <span class="point">.</span> <b>'-'</b>
+  <a href="#rule_15"> 15</a>       | <span class="point">.</span> <b>'*'</b>
+  <a href="#rule_16"> 16</a>       | <span class="point">.</span> <b>'/'</b>
+  <a href="#rule_17"> 17</a>       | <span class="point">.</span> <b>'%'</b>
+  <a href="#rule_18"> 18</a>       | <span class="point">.</span> <b>'!'</b>
+  <a href="#rule_19"> 19</a>       | <span class="point">.</span> <b>TOK_VOID</b>
+  <a href="#rule_20"> 20</a>       | <span class="point">.</span> <b>TOK_CHAR</b>
+  <a href="#rule_21"> 21</a>       | <span class="point">.</span> <b>TOK_INT</b>
+  <a href="#rule_22"> 22</a>       | <span class="point">.</span> <b>TOK_STRING</b>
+  <a href="#rule_23"> 23</a>       | <span class="point">.</span> <b>TOK_IF</b>
+  <a href="#rule_24"> 24</a>       | <span class="point">.</span> <b>TOK_ELSE</b>
+  <a href="#rule_25"> 25</a>       | <span class="point">.</span> <b>TOK_WHILE</b>
+  <a href="#rule_26"> 26</a>       | <span class="point">.</span> <b>TOK_RETURN</b>
+  <a href="#rule_27"> 27</a>       | <span class="point">.</span> <b>TOK_STRUCT</b>
+  <a href="#rule_28"> 28</a>       | <span class="point">.</span> <b>TOK_NULL</b>
+  <a href="#rule_29"> 29</a>       | <span class="point">.</span> <b>TOK_NEW</b>
+  <a href="#rule_30"> 30</a>       | <span class="point">.</span> <b>TOK_ARRAY</b>
+  <a href="#rule_31"> 31</a>       | <span class="point">.</span> <b>TOK_EQ</b>
+  <a href="#rule_32"> 32</a>       | <span class="point">.</span> <b>TOK_NE</b>
+  <a href="#rule_33"> 33</a>       | <span class="point">.</span> <b>TOK_LT</b>
+  <a href="#rule_34"> 34</a>       | <span class="point">.</span> <b>TOK_LE</b>
+  <a href="#rule_35"> 35</a>       | <span class="point">.</span> <b>TOK_GT</b>
+  <a href="#rule_36"> 36</a>       | <span class="point">.</span> <b>TOK_GE</b>
+  <a href="#rule_37"> 37</a>       | <span class="point">.</span> <b>TOK_IDENT</b>
+  <a href="#rule_38"> 38</a>       | <span class="point">.</span> <b>TOK_INTCON</b>
+  <a href="#rule_39"> 39</a>       | <span class="point">.</span> <b>TOK_CHARCON</b>
+  <a href="#rule_40"> 40</a>       | <span class="point">.</span> <b>TOK_STRINGCON</b>
+  <a href="#rule_41"> 41</a>       | <span class="point">.</span> <b>TOK_ORD</b>
+  <a href="#rule_42"> 42</a>       | <span class="point">.</span> <b>TOK_CHR</b>
+  <a href="#rule_43"> 43</a>       | <span class="point">.</span> <b>TOK_ROOT</b>
+
+    $end           <a href="#state_2">shift, and go to state 2</a>
+    TOK_VOID       <a href="#state_3">shift, and go to state 3</a>
+    TOK_CHAR       <a href="#state_4">shift, and go to state 4</a>
+    TOK_INT        <a href="#state_5">shift, and go to state 5</a>
+    TOK_STRING     <a href="#state_6">shift, and go to state 6</a>
+    TOK_IF         <a href="#state_7">shift, and go to state 7</a>
+    TOK_ELSE       <a href="#state_8">shift, and go to state 8</a>
+    TOK_WHILE      <a href="#state_9">shift, and go to state 9</a>
+    TOK_RETURN     <a href="#state_10">shift, and go to state 10</a>
+    TOK_STRUCT     <a href="#state_11">shift, and go to state 11</a>
+    TOK_NULL       <a href="#state_12">shift, and go to state 12</a>
+    TOK_NEW        <a href="#state_13">shift, and go to state 13</a>
+    TOK_ARRAY      <a href="#state_14">shift, and go to state 14</a>
+    TOK_EQ         <a href="#state_15">shift, and go to state 15</a>
+    TOK_NE         <a href="#state_16">shift, and go to state 16</a>
+    TOK_LT         <a href="#state_17">shift, and go to state 17</a>
+    TOK_LE         <a href="#state_18">shift, and go to state 18</a>
+    TOK_GT         <a href="#state_19">shift, and go to state 19</a>
+    TOK_GE         <a href="#state_20">shift, and go to state 20</a>
+    TOK_IDENT      <a href="#state_21">shift, and go to state 21</a>
+    TOK_INTCON     <a href="#state_22">shift, and go to state 22</a>
+    TOK_CHARCON    <a href="#state_23">shift, and go to state 23</a>
+    TOK_STRINGCON  <a href="#state_24">shift, and go to state 24</a>
+    TOK_ORD        <a href="#state_25">shift, and go to state 25</a>
+    TOK_CHR        <a href="#state_26">shift, and go to state 26</a>
+    TOK_ROOT       <a href="#state_27">shift, and go to state 27</a>
+    '('            <a href="#state_28">shift, and go to state 28</a>
+    ')'            <a href="#state_29">shift, and go to state 29</a>
+    '['            <a href="#state_30">shift, and go to state 30</a>
+    ']'            <a href="#state_31">shift, and go to state 31</a>
+    '{'            <a href="#state_32">shift, and go to state 32</a>
+    '}'            <a href="#state_33">shift, and go to state 33</a>
+    ';'            <a href="#state_34">shift, and go to state 34</a>
+    ','            <a href="#state_35">shift, and go to state 35</a>
+    '.'            <a href="#state_36">shift, and go to state 36</a>
+    '='            <a href="#state_37">shift, and go to state 37</a>
+    '+'            <a href="#state_38">shift, and go to state 38</a>
+    '-'            <a href="#state_39">shift, and go to state 39</a>
+    '*'            <a href="#state_40">shift, and go to state 40</a>
+    '/'            <a href="#state_41">shift, and go to state 41</a>
+    '%'            <a href="#state_42">shift, and go to state 42</a>
+    '!'            <a href="#state_43">shift, and go to state 43</a>
+
+    token  <a href="#state_44">go to state 44</a>
+</p>
+
+<h3><a name="state_2" id="state_2"></a>state 2</h3>
+
+<p class="pre">  <a href="#rule_0">  0</a> <span class="i">$accept</span> → <span class="i">program</span> <b>$end</b> <span class="point">.</span>
+
+    $default  accept
+</p>
+
+<h3><a name="state_3" id="state_3"></a>state 3</h3>
+
+<p class="pre">  <a href="#rule_19"> 19</a> <span class="i">token</span> → <b>TOK_VOID</b> <span class="point">.</span>
+
+    $default  <a href="#rule_19">reduce using rule 19</a> (token)
+</p>
+
+<h3><a name="state_4" id="state_4"></a>state 4</h3>
+
+<p class="pre">  <a href="#rule_20"> 20</a> <span class="i">token</span> → <b>TOK_CHAR</b> <span class="point">.</span>
+
+    $default  <a href="#rule_20">reduce using rule 20</a> (token)
+</p>
+
+<h3><a name="state_5" id="state_5"></a>state 5</h3>
+
+<p class="pre">  <a href="#rule_21"> 21</a> <span class="i">token</span> → <b>TOK_INT</b> <span class="point">.</span>
+
+    $default  <a href="#rule_21">reduce using rule 21</a> (token)
+</p>
+
+<h3><a name="state_6" id="state_6"></a>state 6</h3>
+
+<p class="pre">  <a href="#rule_22"> 22</a> <span class="i">token</span> → <b>TOK_STRING</b> <span class="point">.</span>
+
+    $default  <a href="#rule_22">reduce using rule 22</a> (token)
+</p>
+
+<h3><a name="state_7" id="state_7"></a>state 7</h3>
+
+<p class="pre">  <a href="#rule_23"> 23</a> <span class="i">token</span> → <b>TOK_IF</b> <span class="point">.</span>
+
+    $default  <a href="#rule_23">reduce using rule 23</a> (token)
+</p>
+
+<h3><a name="state_8" id="state_8"></a>state 8</h3>
+
+<p class="pre">  <a href="#rule_24"> 24</a> <span class="i">token</span> → <b>TOK_ELSE</b> <span class="point">.</span>
+
+    $default  <a href="#rule_24">reduce using rule 24</a> (token)
+</p>
+
+<h3><a name="state_9" id="state_9"></a>state 9</h3>
+
+<p class="pre">  <a href="#rule_25"> 25</a> <span class="i">token</span> → <b>TOK_WHILE</b> <span class="point">.</span>
+
+    $default  <a href="#rule_25">reduce using rule 25</a> (token)
+</p>
+
+<h3><a name="state_10" id="state_10"></a>state 10</h3>
+
+<p class="pre">  <a href="#rule_26"> 26</a> <span class="i">token</span> → <b>TOK_RETURN</b> <span class="point">.</span>
+
+    $default  <a href="#rule_26">reduce using rule 26</a> (token)
+</p>
+
+<h3><a name="state_11" id="state_11"></a>state 11</h3>
+
+<p class="pre">  <a href="#rule_27"> 27</a> <span class="i">token</span> → <b>TOK_STRUCT</b> <span class="point">.</span>
+
+    $default  <a href="#rule_27">reduce using rule 27</a> (token)
+</p>
+
+<h3><a name="state_12" id="state_12"></a>state 12</h3>
+
+<p class="pre">  <a href="#rule_28"> 28</a> <span class="i">token</span> → <b>TOK_NULL</b> <span class="point">.</span>
+
+    $default  <a href="#rule_28">reduce using rule 28</a> (token)
+</p>
+
+<h3><a name="state_13" id="state_13"></a>state 13</h3>
+
+<p class="pre">  <a href="#rule_29"> 29</a> <span class="i">token</span> → <b>TOK_NEW</b> <span class="point">.</span>
+
+    $default  <a href="#rule_29">reduce using rule 29</a> (token)
+</p>
+
+<h3><a name="state_14" id="state_14"></a>state 14</h3>
+
+<p class="pre">  <a href="#rule_30"> 30</a> <span class="i">token</span> → <b>TOK_ARRAY</b> <span class="point">.</span>
+
+    $default  <a href="#rule_30">reduce using rule 30</a> (token)
+</p>
+
+<h3><a name="state_15" id="state_15"></a>state 15</h3>
+
+<p class="pre">  <a href="#rule_31"> 31</a> <span class="i">token</span> → <b>TOK_EQ</b> <span class="point">.</span>
+
+    $default  <a href="#rule_31">reduce using rule 31</a> (token)
+</p>
+
+<h3><a name="state_16" id="state_16"></a>state 16</h3>
+
+<p class="pre">  <a href="#rule_32"> 32</a> <span class="i">token</span> → <b>TOK_NE</b> <span class="point">.</span>
+
+    $default  <a href="#rule_32">reduce using rule 32</a> (token)
+</p>
+
+<h3><a name="state_17" id="state_17"></a>state 17</h3>
+
+<p class="pre">  <a href="#rule_33"> 33</a> <span class="i">token</span> → <b>TOK_LT</b> <span class="point">.</span>
+
+    $default  <a href="#rule_33">reduce using rule 33</a> (token)
+</p>
+
+<h3><a name="state_18" id="state_18"></a>state 18</h3>
+
+<p class="pre">  <a href="#rule_34"> 34</a> <span class="i">token</span> → <b>TOK_LE</b> <span class="point">.</span>
+
+    $default  <a href="#rule_34">reduce using rule 34</a> (token)
+</p>
+
+<h3><a name="state_19" id="state_19"></a>state 19</h3>
+
+<p class="pre">  <a href="#rule_35"> 35</a> <span class="i">token</span> → <b>TOK_GT</b> <span class="point">.</span>
+
+    $default  <a href="#rule_35">reduce using rule 35</a> (token)
+</p>
+
+<h3><a name="state_20" id="state_20"></a>state 20</h3>
+
+<p class="pre">  <a href="#rule_36"> 36</a> <span class="i">token</span> → <b>TOK_GE</b> <span class="point">.</span>
+
+    $default  <a href="#rule_36">reduce using rule 36</a> (token)
+</p>
+
+<h3><a name="state_21" id="state_21"></a>state 21</h3>
+
+<p class="pre">  <a href="#rule_37"> 37</a> <span class="i">token</span> → <b>TOK_IDENT</b> <span class="point">.</span>
+
+    $default  <a href="#rule_37">reduce using rule 37</a> (token)
+</p>
+
+<h3><a name="state_22" id="state_22"></a>state 22</h3>
+
+<p class="pre">  <a href="#rule_38"> 38</a> <span class="i">token</span> → <b>TOK_INTCON</b> <span class="point">.</span>
+
+    $default  <a href="#rule_38">reduce using rule 38</a> (token)
+</p>
+
+<h3><a name="state_23" id="state_23"></a>state 23</h3>
+
+<p class="pre">  <a href="#rule_39"> 39</a> <span class="i">token</span> → <b>TOK_CHARCON</b> <span class="point">.</span>
+
+    $default  <a href="#rule_39">reduce using rule 39</a> (token)
+</p>
+
+<h3><a name="state_24" id="state_24"></a>state 24</h3>
+
+<p class="pre">  <a href="#rule_40"> 40</a> <span class="i">token</span> → <b>TOK_STRINGCON</b> <span class="point">.</span>
+
+    $default  <a href="#rule_40">reduce using rule 40</a> (token)
+</p>
+
+<h3><a name="state_25" id="state_25"></a>state 25</h3>
+
+<p class="pre">  <a href="#rule_41"> 41</a> <span class="i">token</span> → <b>TOK_ORD</b> <span class="point">.</span>
+
+    $default  <a href="#rule_41">reduce using rule 41</a> (token)
+</p>
+
+<h3><a name="state_26" id="state_26"></a>state 26</h3>
+
+<p class="pre">  <a href="#rule_42"> 42</a> <span class="i">token</span> → <b>TOK_CHR</b> <span class="point">.</span>
+
+    $default  <a href="#rule_42">reduce using rule 42</a> (token)
+</p>
+
+<h3><a name="state_27" id="state_27"></a>state 27</h3>
+
+<p class="pre">  <a href="#rule_43"> 43</a> <span class="i">token</span> → <b>TOK_ROOT</b> <span class="point">.</span>
+
+    $default  <a href="#rule_43">reduce using rule 43</a> (token)
+</p>
+
+<h3><a name="state_28" id="state_28"></a>state 28</h3>
+
+<p class="pre">  <a href="#rule_3">  3</a> <span class="i">token</span> → <b>'('</b> <span class="point">.</span>
+
+    $default  <a href="#rule_3">reduce using rule 3</a> (token)
+</p>
+
+<h3><a name="state_29" id="state_29"></a>state 29</h3>
+
+<p class="pre">  <a href="#rule_4">  4</a> <span class="i">token</span> → <b>')'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_4">reduce using rule 4</a> (token)
+</p>
+
+<h3><a name="state_30" id="state_30"></a>state 30</h3>
+
+<p class="pre">  <a href="#rule_5">  5</a> <span class="i">token</span> → <b>'['</b> <span class="point">.</span>
+
+    $default  <a href="#rule_5">reduce using rule 5</a> (token)
+</p>
+
+<h3><a name="state_31" id="state_31"></a>state 31</h3>
+
+<p class="pre">  <a href="#rule_6">  6</a> <span class="i">token</span> → <b>']'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_6">reduce using rule 6</a> (token)
+</p>
+
+<h3><a name="state_32" id="state_32"></a>state 32</h3>
+
+<p class="pre">  <a href="#rule_7">  7</a> <span class="i">token</span> → <b>'{'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_7">reduce using rule 7</a> (token)
+</p>
+
+<h3><a name="state_33" id="state_33"></a>state 33</h3>
+
+<p class="pre">  <a href="#rule_8">  8</a> <span class="i">token</span> → <b>'}'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_8">reduce using rule 8</a> (token)
+</p>
+
+<h3><a name="state_34" id="state_34"></a>state 34</h3>
+
+<p class="pre">  <a href="#rule_9">  9</a> <span class="i">token</span> → <b>';'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_9">reduce using rule 9</a> (token)
+</p>
+
+<h3><a name="state_35" id="state_35"></a>state 35</h3>
+
+<p class="pre">  <a href="#rule_10"> 10</a> <span class="i">token</span> → <b>','</b> <span class="point">.</span>
+
+    $default  <a href="#rule_10">reduce using rule 10</a> (token)
+</p>
+
+<h3><a name="state_36" id="state_36"></a>state 36</h3>
+
+<p class="pre">  <a href="#rule_11"> 11</a> <span class="i">token</span> → <b>'.'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_11">reduce using rule 11</a> (token)
+</p>
+
+<h3><a name="state_37" id="state_37"></a>state 37</h3>
+
+<p class="pre">  <a href="#rule_12"> 12</a> <span class="i">token</span> → <b>'='</b> <span class="point">.</span>
+
+    $default  <a href="#rule_12">reduce using rule 12</a> (token)
+</p>
+
+<h3><a name="state_38" id="state_38"></a>state 38</h3>
+
+<p class="pre">  <a href="#rule_13"> 13</a> <span class="i">token</span> → <b>'+'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_13">reduce using rule 13</a> (token)
+</p>
+
+<h3><a name="state_39" id="state_39"></a>state 39</h3>
+
+<p class="pre">  <a href="#rule_14"> 14</a> <span class="i">token</span> → <b>'-'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_14">reduce using rule 14</a> (token)
+</p>
+
+<h3><a name="state_40" id="state_40"></a>state 40</h3>
+
+<p class="pre">  <a href="#rule_15"> 15</a> <span class="i">token</span> → <b>'*'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_15">reduce using rule 15</a> (token)
+</p>
+
+<h3><a name="state_41" id="state_41"></a>state 41</h3>
+
+<p class="pre">  <a href="#rule_16"> 16</a> <span class="i">token</span> → <b>'/'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_16">reduce using rule 16</a> (token)
+</p>
+
+<h3><a name="state_42" id="state_42"></a>state 42</h3>
+
+<p class="pre">  <a href="#rule_17"> 17</a> <span class="i">token</span> → <b>'%'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_17">reduce using rule 17</a> (token)
+</p>
+
+<h3><a name="state_43" id="state_43"></a>state 43</h3>
+
+<p class="pre">  <a href="#rule_18"> 18</a> <span class="i">token</span> → <b>'!'</b> <span class="point">.</span>
+
+    $default  <a href="#rule_18">reduce using rule 18</a> (token)
+</p>
+
+<h3><a name="state_44" id="state_44"></a>state 44</h3>
+
+<p class="pre">  <a href="#rule_1">  1</a> <span class="i">program</span> → <span class="i">program</span> <span class="i">token</span> <span class="point">.</span>
+
+    $default  <a href="#rule_1">reduce using rule 1</a> (program)
+</p>
+
+<div id="footer"><hr />This document was generated using
+      <a href="http://www.gnu.org/software/bison/" title="GNU Bison">
+      GNU Bison 3.0.4</a>
+      XML Automaton Report.<br />
+      Verbatim copying and distribution of this entire page is
+      permitted in any medium, provided this notice is preserved.</div></body>
+</html>
