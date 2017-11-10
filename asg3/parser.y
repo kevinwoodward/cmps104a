@@ -30,7 +30,8 @@
 %token TOK_INDEX TOK_FIELD TOK_NEWSTRING TOK_RETURNVOID TOK_VARDECL
 %token TOK_FUNCTION TOK_PARAMLIST TOK_PROTOTYPE
 
-
+%precedence TOK_IF
+%precedence TOK_ELSE
 %right  '='
 %left   TOK_EQ TOK_NE '<' TOK_LE '>' TOK_GE
 %left   '+' '-'
@@ -61,11 +62,11 @@ structdef : TOK_STRUCT TOK_IDENT '{' '}'
                     $2->symbol = TOK_TYPEID;
                     $$ = $1->adopt($2);
                 }
-          | TOK_STRUCT TOK_IDENT '{' fielddecl_seq '}'
+          | fielddecl_seq '}'
                 {
-                    destroy ($3, $5);
-                    $2->symbol = TOK_TYPEID;
-                    $$ = $1->adopt($2,$4);
+                    destroy ($2);
+
+                    $$ = $2;
                 }
 		  ;
 
@@ -74,7 +75,12 @@ fielddecl_seq : fielddecl_seq fielddecl ';'
                     destroy($3);
                     $$ = $1->adopt($2);
                 }
-              |
+              | TOK_STRUCT TOK_IDENT '{' fielddecl
+                  {
+                      destroy ($3);
+                      $2->symbol = TOK_TYPEID;
+                      $$ = $1->adopt($2, $4);
+                  }
 			  ;
 
 fielddecl   : basetype TOK_IDENT
@@ -197,12 +203,12 @@ while
     ;
 
 ifelse
-    : TOK_IF '(' expr ')' statement
+    : TOK_IF '(' expr ')' statement %prec TOK_IF
         {
             destroy($2, $4);
             $$ = $1->adopt($3, $5);
         }
-    | TOK_IF '(' expr ')' statement TOK_ELSE statement
+    | TOK_IF '(' expr ')' statement TOK_ELSE statement %prec TOK_ELSE
         {
             destroy($2);
             destroy($4);
