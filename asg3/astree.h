@@ -31,7 +31,7 @@ struct astree {
    astree* synthesize_prototype (int symbol,
                                         astree* identdecl,
                                         astree* func_params);
-
+   static astree* synthesize_root(astree* new_root);
     astree* synthesize_function (int symbol,
                                         astree* identdecl,
                                         astree* func_params,

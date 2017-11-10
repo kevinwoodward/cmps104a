@@ -42,7 +42,7 @@
 
 
 
-%start start
+
 
 %%
 
@@ -54,7 +54,11 @@ program  : program structdef  { $$ = $1->adopt ($2); }
          | program statement  { $$ = $1->adopt ($2); }
          | program error '}'  { $$ = $1; }
          | program error ';'  { $$ = $1; }
-         | %empty             { $$ = parser::root; }
+         | %empty
+            {
+
+             $$ = astree::synthesize_root(parser::root);
+            }
          ;
 
 structdef : TOK_STRUCT TOK_IDENT '{' '}'

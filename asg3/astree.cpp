@@ -43,6 +43,11 @@ astree* astree::adopt_sym (astree* child, int symbol_) {
    return adopt (child);
 }
 
+astree* astree::synthesize_root(astree* new_root){
+    new_root = new astree(TOK_ROOT, {0,0,0}, "<<ROOT>>");
+    return new_root;
+}
+
 astree* astree::synthesize_function (int symbol,
                                     astree* identdecl,
                                     astree* func_params,
@@ -63,7 +68,7 @@ astree* astree::synthesize_prototype (int symbol,
     astree* proto_ast = new astree (symbol, lexer::lloc, "<<PROTOTYPE>>");
     proto_ast->adopt(identdecl);
     proto_ast->adopt(func_params);
-    return proto_ast;    
+    return proto_ast;
 
 }
 
