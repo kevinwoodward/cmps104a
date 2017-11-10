@@ -43,6 +43,29 @@ astree* astree::adopt_sym (astree* child, int symbol_) {
    return adopt (child);
 }
 
+astree* astree::synthesize_function (int symbol,
+                                    astree* identdecl,
+                                    astree* func_params,
+                                    astree* block){
+
+    astree* func_ast = new astree (symbol, lexer::lloc, "<<FUNCTION>>");
+    func_ast->adopt(identdecl);
+    func_ast->adopt(func_params);
+    func_ast->adopt(block);
+    return func_ast;
+
+}
+
+astree* astree::synthesize_prototype (int symbol,
+                                     astree* identdecl,
+                                     astree* func_params){
+
+    astree* proto_ast = new astree (symbol, lexer::lloc, "<<PROTOTYPE>>");
+    proto_ast->adopt(identdecl);
+    proto_ast->adopt(func_params);
+    return proto_ast;    
+
+}
 
 
 void astree::dump_node (FILE* outfile) {

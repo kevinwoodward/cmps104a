@@ -25,16 +25,20 @@
 
 %token TOK_BLOCK TOK_CALL TOK_IFELSE TOK_INITDECL
 %token TOK_POS TOK_NEG TOK_NEWARRAY TOK_TYPEID TOK_FIELD
-%token TOK_ORD TOK_CHR TOK_ROOT
+%token TOK_ORD TOK_CHR TOK_ROOT TOK_PARAN
 
 %token TOK_INDEX TOK_NEWSTRING TOK_RETURNVOID TOK_VARDECL
-%token TOK_FUNCTION
+%token TOK_FUNCTION TOK_PARAMLIST TOK_PROTOTYPE
 
+%right TOK_IF TOK_ELSE
 %right  '='
+%left   TOK_EQ TOK_NE '<' TOK_LE '>' TOK_GE
 %left   '+' '-'
-%left   '*' '/'
-%right  '^'
-%right  POS NEG
+%left   '*' '/' '%'
+%right  TOK_POS TOK_NEG '!' TOK_NEW
+%left   TOK_INDEX TOK_FIELD TOK_FUNCTION
+%precedence TOK_PARAN
+
 
 %start program
 
@@ -98,17 +102,33 @@ basetype
 function
     : identdecl '(' ')' block
         {
-            //need to synthesize TOK_FUNCTION
-            //or TOK_PROTOTYPE
+            destroy($3);
+            $2->symbol = TOK_PARAMLIST;
+            if($4->symbol == ';'){
+                destroy($4);
+                $$ = $1->synthesize_prototype(TOK_PROTOTYPE, $1, $2);
+            }
+            else
+                $$ = $1->astree::synthesize_function(TOK_FUNCTION, $1, $2, $4);
+
         }
-    | identdecl '(' function_args ')' block
+    | identdecl '(' func_params ')' block
         {
+            destroy($4);
+            $2->symbol = TOK_PARAMLIST;
+            $2 = $2->adopt($3);
+            if($5->symbol == ';'){
+                destroy($5);
+                $$ = $1->synthesize_prototype(TOK_PROTOTYPE, $1, $2);
+            }
+            else
+                $$ = $1->synthesize_function(TOK_FUNCTION, $1, $2, $5);
 
         }
     ;
 
-function_args
-    : function_args ',' identdecl
+func_params
+    : func_params ',' identdecl
         {
             destroy($2);
             $$ = $1->adopt($3);
@@ -131,6 +151,7 @@ block
     : '{' statement_seq '}'
         {
             destroy($3);
+            $1->symbol = TOK_BLOCK;
             $$ = $1->adopt($2);
         }
     | ';'
@@ -159,7 +180,7 @@ statement
     ;
 
 vardecl
-    : indentdecl '=' expr ';'
+    : identdecl '=' expr ';'
         {
             destroy($4);
             $2->symbol = TOK_VARDECL;
@@ -171,7 +192,7 @@ while
     : TOK_WHILE '(' expr ')' statement
         {
             destroy($2, $4);
-            $$ = adopt->($3, $5);
+            $$ = $1->adopt($3, $5);
         }
     ;
 
@@ -185,7 +206,7 @@ ifelse
         {
             destroy($2);
             destroy($4);
-            destory($6);
+            destroy($6);
             $1 = $1->adopt($3);
             $1 = $1->adopt($5);
             $1 = $1->adopt($7);
@@ -213,11 +234,11 @@ expr    : expr '=' expr         { $$ = $2->adopt ($1, $3); }
         | expr '*' expr         { $$ = $2->adopt ($1, $3); }
         | expr '/' expr         { $$ = $2->adopt ($1, $3); }
         | expr '^' expr         { $$ = $2->adopt ($1, $3); }
-        | '+' expr %prec POS    { $$ = $1->adopt_sym ($2, POS); }
-        | '-' expr %prec NEG    { $$ = $1->adopt_sym ($2, NEG); }
+        | '+' expr %prec TOK_POS  { $$ = $1->adopt_sym ($2, TOK_POS); }
+        | '-' expr %prec TOK_NEG  { $$ = $1->adopt_sym ($2, TOK_NEG); }
         | allocator             { $$ = $1; }
         | call                  { $$ = $1; }
-        | '(' expr ')'          { destroy ($1, $3); $$ = $2; }
+        | '(' expr ')' %prec TOK_PARAN  { destroy ($1, $3); $$ = $2; }
         | variable                { $$ = $1; }
         | constant                { $$ = $1; }
         ;
@@ -254,7 +275,7 @@ call
             $2->symbol = TOK_CALL;
             $$ = $1->adopt($2);
         }
-    | TOK_IDENT '(' function_params ')'
+    | TOK_IDENT '(' call_args ')'
         {
             destroy($4);
             $2 = $2->adopt($3);
@@ -262,8 +283,8 @@ call
         }
     ;
 
-function_params
-    : function_params ',' expr
+call_args
+    : call_args ',' expr
         {
             destroy($2);
             $$ = $1->adopt($3);
@@ -274,7 +295,16 @@ function_params
 variable
     : TOK_IDENT
     | expr '[' expr ']'
-    | expr '.' TOK_FIELD
+        {
+            destroy($4);
+            $2->symbol = TOK_INDEX;
+            $$ = $2->adopt($1, $3);
+        }
+    | expr '.' TOK_IDENT
+        {
+            $3->symbol = TOK_FIELD;
+            $$ = $2->adopt($1, $3);
+        }
     ;
 
 constant

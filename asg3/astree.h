@@ -28,6 +28,14 @@ struct astree {
    astree (int symbol, const location&, const char* lexinfo);
    ~astree();
    astree* adopt (astree* child1, astree* child2 = nullptr);
+   astree* synthesize_prototype (int symbol,
+                                        astree* identdecl,
+                                        astree* func_params);
+
+    astree* synthesize_function (int symbol,
+                                        astree* identdecl,
+                                        astree* func_params,
+                                        astree* block);
    astree* adopt_sym (astree* child, int symbol);
    void dump_node (FILE*);
    void dump_tree (FILE*, int depth = 0);
