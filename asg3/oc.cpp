@@ -161,6 +161,8 @@ int main(int argc, char** argv)
     }
     else
     {
+        yyparse();
+        astree::print(stdout, parser::root, 0);
         cpplines(yyin, preProcArgs.c_str());
         fclose(token_file);
         string strFilename = filename;
