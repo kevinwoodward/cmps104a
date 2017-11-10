@@ -43,10 +43,6 @@ astree* astree::adopt_sym (astree* child, int symbol_) {
    return adopt (child);
 }
 
-astree* astree::set_sym (int new_symbol) {
-   symbol = new_symbol;
-   return this;
-}
 
 
 void astree::dump_node (FILE* outfile) {
