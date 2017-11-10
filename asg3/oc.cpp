@@ -44,10 +44,7 @@ void cpplines(FILE* pipe, const char* filename)
     strcpy(inputname, filename);
 
     int token_iter;
-    while ((token_iter = yylex()) != 0)
-    {
-        //sick
-    }
+    yyparse();
 
     for (;;) {
         break;
@@ -161,8 +158,6 @@ int main(int argc, char** argv)
     }
     else
     {
-        yyparse();
-        astree::print(stdout, parser::root, 0);
         cpplines(yyin, preProcArgs.c_str());
         fclose(token_file);
         string strFilename = filename;
@@ -172,7 +167,14 @@ int main(int argc, char** argv)
         string_set::dump(nfile);
         int pcloseVal = pclose(yyin);
         fclose(nfile);
-        //eprint_status(preProcCommand.c_str(), pcloseVal);
+
+        string astFilename = filename;
+        astFilename.erase(astFilename.end()-3, astFilename.end());
+        astFilename.append(".ast");
+        FILE *astFile = fopen (astFilename.c_str(), "w+");
+        astree::print(astFile, parser::root, 0);
+        fclose(astFile);
+
         if(pcloseVal != 0) exec::exit_status = EXIT_FAILURE;
     }
 

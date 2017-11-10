@@ -98,8 +98,14 @@ void astree::dump (FILE* outfile, astree* tree) {
 
 void astree::print (FILE* outfile, astree* tree, int depth) {
    //fprintf (outfile, "; %*s", depth * 3, "");
-   for(int i=0; i<depth; i++){
+   for(int i=0; i<depth; i++)
+   {
        fprintf(outfile, "|   ");
+   }  
+   if (tree == NULL)
+   {
+       exec::exit_status = 1;
+       return;
    }
    char *tname = const_cast<char*>(parser::get_tname (tree->symbol));
    if(strstr (tname, "TOK_") == tname) tname += 4;

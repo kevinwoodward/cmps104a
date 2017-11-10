@@ -13,7 +13,6 @@ int yylval_token (int symbol) {
     fprintf(token_file, "%3zd %2zd.%.03zd  %-3d  %-15s (%s)\n",
        lexer::lloc.filenr, lexer::lloc.linenr,
        lexer::lloc.offset, symbol, parser::get_tname(symbol), yytext);
-    delete yylval;
     return symbol;
 }
 
