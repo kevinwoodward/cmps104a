@@ -44,7 +44,7 @@ astree* astree::adopt_sym (astree* child, int symbol_) {
 }
 
 astree* astree::synthesize_root(astree* new_root){
-    new_root = new astree(TOK_ROOT, {0,0,0}, "<<ROOT>>");
+    new_root = new astree(TOK_ROOT, {0,0,0}, "");
     return new_root;
 }
 
@@ -53,7 +53,7 @@ astree* astree::synthesize_function (int symbol,
                                     astree* func_params,
                                     astree* block){
 
-    astree* func_ast = new astree (symbol, lexer::lloc, "<<FUNCTION>>");
+    astree* func_ast = new astree (symbol, lexer::lloc, "");
     func_ast->adopt(identdecl);
     func_ast->adopt(func_params);
     func_ast->adopt(block);
@@ -65,7 +65,7 @@ astree* astree::synthesize_prototype (int symbol,
                                      astree* identdecl,
                                      astree* func_params){
 
-    astree* proto_ast = new astree (symbol, lexer::lloc, "<<PROTOTYPE>>");
+    astree* proto_ast = new astree (symbol, lexer::lloc, "");
     proto_ast->adopt(identdecl);
     proto_ast->adopt(func_params);
     return proto_ast;
@@ -97,9 +97,14 @@ void astree::dump (FILE* outfile, astree* tree) {
 }
 
 void astree::print (FILE* outfile, astree* tree, int depth) {
-   fprintf (outfile, "; %*s", depth * 3, "");
-   fprintf (outfile, "%s \"%s\" (%zd.%zd.%zd)\n",
-            parser::get_tname (tree->symbol), tree->lexinfo->c_str(),
+   //fprintf (outfile, "; %*s", depth * 3, "");
+   for(int i=0; i<depth; i++){
+       fprintf(outfile, "|   ");
+   }
+   char *tname = const_cast<char*>(parser::get_tname (tree->symbol));
+   if(strstr (tname, "TOK_") == tname) tname += 4;
+   fprintf (outfile, "%s \"%s\" %zd.%zd.%zd\n",
+            tname, tree->lexinfo->c_str(),
             tree->lloc.filenr, tree->lloc.linenr, tree->lloc.offset);
    for (astree* child: tree->children) {
       astree::print (outfile, child, depth + 1);

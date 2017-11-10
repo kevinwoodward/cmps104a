@@ -51,15 +51,13 @@ start
     ;
 
 program
-    : program structdef  { $$ = $1->adopt ($2); }
-    | program function   { $$ = $1->adopt ($2); }
-    | program statement  { $$ = $1->adopt ($2); }
-    | program error '}'  { $$ = $1; }
-    | program error ';'  { $$ = $1; }
-    | %empty
-        {
-            $$ = astree::synthesize_root(parser::root);
-        }
+    : program structdef { $$ = $1->adopt ($2); }
+    | program function  { $$ = $1->adopt ($2); }
+    | program statement { $$ = $1->adopt ($2); }
+    | program error '}' { $$ = $1; }
+    | program error ';' { $$ = $1; }
+    | %empty            { $$ = astree::synthesize_root(parser::root); }
+
     ;
 
 structdef
@@ -70,19 +68,12 @@ structdef
             $$ = $1->adopt($2);
         }
     | fielddecl_seq '}'
-        {
-            destroy ($2);
-
-            $$ = $1;
-        }
+        { destroy ($2); $$ = $1; }
     ;
 
 fielddecl_seq
     : fielddecl_seq fielddecl ';'
-        {
-            destroy($3);
-            $$ = $1->adopt($2);
-        }
+        { destroy($3); $$ = $1->adopt($2); }
     | TOK_STRUCT TOK_IDENT '{' fielddecl
         {
             destroy ($3);
@@ -152,17 +143,18 @@ func_params
     | identdecl
     ;
 
-identdecl   : basetype TOK_IDENT
-                {
-                    $2->symbol = TOK_DECLID;
-                    $$ = $1->adopt($2);
-                }
-            | basetype TOK_ARRAY TOK_IDENT
-                {
-                    $2->symbol = TOK_FIELD;
-                    $$ = $2->adopt($1, $3);
-                }
-            ;
+identdecl
+    : basetype TOK_IDENT
+        {
+            $2->symbol = TOK_DECLID;
+            $$ = $1->adopt($2);
+        }
+    | basetype TOK_ARRAY TOK_IDENT
+        {
+            $2->symbol = TOK_FIELD;
+            $$ = $2->adopt($1, $3);
+        }
+    ;
 block
     :  statement_seq '}'
         {
@@ -187,17 +179,16 @@ statement_seq
 
 statement
     : block
-    | vardecl
+    | vardecl ';'
     | while
     | ifelse
-    | return
+    | return ';'
     | expr ';'
     ;
 
 vardecl
-    : identdecl '=' expr ';'
+    : identdecl '=' expr
         {
-            destroy($4);
             $2->symbol = TOK_VARDECL;
             $$ = $2->adopt($1, $3);
         }
@@ -230,15 +221,15 @@ ifelse
     ;
 
 return
-    : TOK_RETURN ';'
+    : TOK_RETURN
         {
-           destroy($2);
+
             $1->symbol = TOK_RETURNVOID;
             $$ = $1;
         }
-    | TOK_RETURN expr ';'
+    | TOK_RETURN expr
         {
-            destroy($3);
+
             $$ = $1->adopt($2);
         }
     ;
@@ -296,13 +287,13 @@ call
         {
             destroy($3);
             $2->symbol = TOK_CALL;
-            $$ = $1->adopt($2);
+            $$ = $2->adopt($1);
         }
     | TOK_IDENT '(' call_args ')'
         {
             destroy($4);
-            $2 = $2->adopt($3);
-            $$ = $1->adopt($2);
+            $2->symbol = TOK_CALL;
+            $$ = $2->adopt($1, $3);
         }
     ;
 
