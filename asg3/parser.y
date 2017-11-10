@@ -30,6 +30,7 @@
 %token TOK_INDEX TOK_FIELD TOK_NEWSTRING TOK_RETURNVOID TOK_VARDECL
 %token TOK_FUNCTION TOK_PARAMLIST TOK_PROTOTYPE
 
+%precedence TOK_IDENT
 %precedence TOK_IF
 %precedence TOK_ELSE
 %right  '='
@@ -37,15 +38,15 @@
 %left   '+' '-'
 %left   '*' '/' '%'
 %precedence  TOK_UNI
-%precedence   '[' '.'
+%precedence   '[' '.' '('
 
 
 
-%start program
+%start start
 
 %%
 
-start    : program            { yyparse_astree = $1; }
+start    : program            { parser::root = $1; }
          ;
 
 program  : program structdef  { $$ = $1->adopt ($2); }
@@ -53,7 +54,7 @@ program  : program structdef  { $$ = $1->adopt ($2); }
          | program statement  { $$ = $1->adopt ($2); }
          | program error '}'  { $$ = $1; }
          | program error ';'  { $$ = $1; }
-         |                    { $$ = parser::root; }
+         | %empty             { $$ = parser::root; }
          ;
 
 structdef : TOK_STRUCT TOK_IDENT '{' '}'
@@ -66,7 +67,7 @@ structdef : TOK_STRUCT TOK_IDENT '{' '}'
                 {
                     destroy ($2);
 
-                    $$ = $2;
+                    $$ = $1;
                 }
 		  ;
 
@@ -154,22 +155,25 @@ identdecl   : basetype TOK_IDENT
                 }
             ;
 block
-    : '{' statement_seq '}'
+    :  statement_seq '}'
         {
-            destroy($3);
-            $1->symbol = TOK_BLOCK;
-            $$ = $1->adopt($2);
+            destroy($2);
+
+            $$ = $1;
         }
     | ';'
     ;
 
 statement_seq
-    : statement_seq statement ';'
+    : statement_seq statement
         {
-            destroy($3);
             $$ = $1->adopt($2);
         }
-    |
+    | '{' statement
+        {
+            $1->symbol = TOK_BLOCK;
+            $$ = $1->adopt($2);
+        }
     ;
 
 statement
@@ -179,10 +183,6 @@ statement
     | ifelse
     | return
     | expr ';'
-        {
-            destroy($2);
-            $$ = $1;
-        }
     ;
 
 vardecl
@@ -223,7 +223,7 @@ ifelse
 return
     : TOK_RETURN ';'
         {
-            destroy($2);
+           destroy($2);
             $1->symbol = TOK_RETURNVOID;
             $$ = $1;
         }
@@ -252,7 +252,7 @@ expr    : expr '=' expr         { $$ = $2->adopt ($1, $3); }
         | allocator             { $$ = $1; }
         | call                  { $$ = $1; }
         | '(' expr ')' { destroy ($1, $3); $$ = $2; }
-        | variable               { $$ = $1; }
+        | variable                { $$ = $1; }
         | constant                { $$ = $1; }
         ;
 
@@ -307,13 +307,13 @@ call_args
 
 variable
     : TOK_IDENT
-    | expr '[' expr ']' %prec TOK_INDEX
+    | expr '[' expr ']'
         {
             destroy($4);
             $2->symbol = TOK_INDEX;
             $$ = $2->adopt($1, $3);
         }
-    | expr '.' TOK_IDENT %prec TOK_FIELD
+    | expr '.' TOK_IDENT
         {
             $3->symbol = TOK_FIELD;
             $$ = $2->adopt($1, $3);
