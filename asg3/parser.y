@@ -96,7 +96,7 @@ fielddecl   : basetype TOK_IDENT
             | basetype TOK_ARRAY TOK_IDENT
                 {
                     $2->symbol = TOK_FIELD;
-                    $$ = $2->adopt($1, $2);
+                    $$ = $2->adopt($1, $3);
                 }
             ;
 basetype
@@ -155,7 +155,7 @@ identdecl   : basetype TOK_IDENT
             | basetype TOK_ARRAY TOK_IDENT
                 {
                     $2->symbol = TOK_FIELD;
-                    $$ = $2->adopt($1, $2);
+                    $$ = $2->adopt($1, $3);
                 }
             ;
 block
