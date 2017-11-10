@@ -25,20 +25,19 @@
 
 %token TOK_BLOCK TOK_CALL TOK_IFELSE TOK_INITDECL
 %token TOK_POS TOK_NEG TOK_NEWARRAY TOK_TYPEID
-%token TOK_ORD TOK_CHR TOK_ROOT TOK_PARAN
+%token TOK_ORD TOK_CHR TOK_ROOT TOK_PARAN TOK_UNI
 
 %token TOK_INDEX TOK_FIELD TOK_NEWSTRING TOK_RETURNVOID TOK_VARDECL
 %token TOK_FUNCTION TOK_PARAMLIST TOK_PROTOTYPE
 
-%right TOK_IF TOK_ELSE
+
 %right  '='
 %left   TOK_EQ TOK_NE '<' TOK_LE '>' TOK_GE
 %left   '+' '-'
 %left   '*' '/' '%'
-%right  TOK_POS TOK_NEG '!' TOK_NEW
-%left   TOK_FIELD TOK_FUNCTION
-%left   TOK_INDEX
-%precedence TOK_PARAN
+%precedence  TOK_UNI
+%precedence   '[' '.'
+
 
 
 %start program
@@ -241,13 +240,13 @@ expr    : expr '=' expr         { $$ = $2->adopt ($1, $3); }
         | expr TOK_GE expr         { $$ = $2->adopt ($1, $3); }
         | expr '<' expr         { $$ = $2->adopt ($1, $3); }
         | expr '>' expr         { $$ = $2->adopt ($1, $3); }
-        | '+' expr %prec TOK_POS  { $$ = $1->adopt_sym ($2, TOK_POS); }
-        | '-' expr %prec TOK_NEG  { $$ = $1->adopt_sym ($2, TOK_NEG); }
-        | '!' expr              { $$ = $1->adopt($2); }
+        | '+' expr %prec TOK_UNI  { $$ = $1->adopt_sym ($2, TOK_POS); }
+        | '-' expr %prec TOK_UNI  { $$ = $1->adopt_sym ($2, TOK_NEG); }
+        | '!' expr %prec TOK_UNI  { $$ = $1->adopt($2); }
         | allocator             { $$ = $1; }
         | call                  { $$ = $1; }
-        | '(' expr ')' %prec TOK_PARAN  { destroy ($1, $3); $$ = $2; }
-        | variable %prec TOK_INDEX               { $$ = $1; }
+        | '(' expr ')' { destroy ($1, $3); $$ = $2; }
+        | variable               { $$ = $1; }
         | constant                { $$ = $1; }
         ;
 
