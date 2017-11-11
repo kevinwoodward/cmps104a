@@ -72,8 +72,8 @@ structdef
     ;
 
 fielddecl_seq
-    : fielddecl_seq fielddecl ';'
-        { destroy($3); $$ = $1->adopt($2); }
+    : fielddecl_seq fielddecl
+        { $$ = $1->adopt($2); }
     | TOK_STRUCT TOK_IDENT '{' fielddecl
         {
             destroy ($3);
@@ -83,13 +83,15 @@ fielddecl_seq
     ;
 
 fielddecl
-    : basetype TOK_IDENT
+    : basetype TOK_IDENT ';'
         {
+            destroy ($3);
             $2->symbol = TOK_FIELD;
             $$ = $1->adopt($2);
         }
-    | basetype TOK_ARRAY TOK_IDENT
+    | basetype TOK_ARRAY TOK_IDENT ';'
         {
+            destroy($4);
             $2->symbol = TOK_FIELD;
             $$ = $2->adopt($1, $3);
         }
@@ -159,11 +161,12 @@ block
     :  statement_seq '}'
         {
             destroy($2);
-
             $$ = $1;
         }
     | ';'
     ;
+
+
 
 statement_seq
     : statement_seq statement
@@ -229,7 +232,6 @@ return
         }
     | TOK_RETURN expr
         {
-
             $$ = $1->adopt($2);
         }
     ;

@@ -33,8 +33,8 @@ astree::~astree() {
 }
 
 astree* astree::adopt (astree* child1, astree* child2) {
-   if (child1 != nullptr) children.push_back (child1);
-   if (child2 != nullptr) children.push_back (child2);
+   if (child1 != nullptr && child1->symbol != ';') children.push_back (child1);
+   if (child2 != nullptr && child2->symbol != ';') children.push_back (child2);
    return this;
 }
 
@@ -101,7 +101,7 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
    for(int i=0; i<depth; i++)
    {
        fprintf(outfile, "|   ");
-   }  
+   }
    if (tree == NULL)
    {
        exec::exit_status = 1;

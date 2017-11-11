@@ -43,7 +43,6 @@ void cpplines(FILE* pipe, const char* filename)
     char inputname[LINESIZE];
     strcpy(inputname, filename);
 
-    int token_iter;
     yyparse();
 
     for (;;) {
@@ -60,30 +59,8 @@ void cpplines(FILE* pipe, const char* filename)
                                inputname);
         if (sscanf_rc == 2)
         {
-            /*printf ("DIRECTIVE: line %d file \"%s\"\n",
-                    linenr,
-                    inputname);*/
             continue;
         }
-        //char* savepos = nullptr;
-        //char* bufptr = buffer;
-
-
-
-
-        // for (int tokenct = 1;; ++tokenct)
-        // {
-        //     char* token = strtok_r(bufptr, " \t\n", &savepos);
-        //     bufptr = nullptr;
-        //     if (token == nullptr) break;
-        //     string_set::intern(token);
-        //
-        //
-        //     /*printf("token %d.%d: [%s]\n",
-        //            linenr,
-        //            tokenct,
-        //            token);*/
-        // }
         ++linenr;
     }
 
