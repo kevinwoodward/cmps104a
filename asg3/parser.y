@@ -1,8 +1,6 @@
 %{
 // Jose Sepulveda, joasepul@ucsc.edu
 // Kevin Woodward, keawoodw@ucsc.edu
-// $Id: parser.y,v 1.11 2017-10-11 14:27:30-07 - - $
-// Dummy parser for scanner project.
 
 #include <cassert>
 
@@ -113,13 +111,19 @@ function
         {
             destroy($3);
             $2->symbol = TOK_PARAMLIST;
-            if($4->symbol == ';'){
+            if($4->symbol == ';')
+            {
                 destroy($4);
                 $$ = $1->synthesize_prototype(TOK_PROTOTYPE, $1, $2);
             }
             else
-                $$ = $1->astree::synthesize_function(TOK_FUNCTION, $1, $2, $4);
-
+            {
+                $$ = $1->astree::synthesize_function(
+                TOK_FUNCTION,
+                $1,
+                $2,
+                $4);
+            }
         }
     | identdecl '(' func_params ')' block
         {

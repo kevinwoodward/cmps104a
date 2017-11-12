@@ -1,3 +1,0 @@
-// $Id: bar.oc,v 1.1 2017-09-21 15:52:37-07 - - $
-#include "nofile.h"
-a = b + c;

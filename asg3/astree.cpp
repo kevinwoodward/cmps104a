@@ -33,8 +33,14 @@ astree::~astree() {
 }
 
 astree* astree::adopt (astree* child1, astree* child2) {
-   if (child1 != nullptr && child1->symbol != ';') children.push_back (child1);
-   if (child2 != nullptr && child2->symbol != ';') children.push_back (child2);
+   if (child1 != nullptr && child1->symbol != ';')
+   {
+       children.push_back (child1);
+   }
+   if (child2 != nullptr && child2->symbol != ';')
+   {
+       children.push_back (child2);
+   }
    return this;
 }
 
