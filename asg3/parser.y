@@ -126,17 +126,15 @@ function
                 $4);
             }
         }
-    | identdecl '(' func_params ')' block
+    | identdecl func_params ')' block
         {
-            destroy($4);
-            $2->symbol = TOK_PARAMLIST;
-            $2 = $2->adopt($3);
-            if($5->symbol == ';'){
-                destroy($5);
+            destroy($3);
+            if($4->symbol == ';'){
+                destroy($4);
                 $$ = $1->synthesize_prototype(TOK_PROTOTYPE, $1, $2);
             }
             else
-                $$ = $1->synthesize_function(TOK_FUNCTION, $1, $2, $5);
+                $$ = $1->synthesize_function(TOK_FUNCTION, $1, $2, $4);
 
         }
     ;
@@ -147,7 +145,11 @@ func_params
             destroy($2);
             $$ = $1->adopt($3);
         }
-    | identdecl
+    | '(' identdecl
+        {
+            $1->symbol = TOK_PARAMLIST;
+            $$ = $1->adopt($2);
+        }
     ;
 
 identdecl
