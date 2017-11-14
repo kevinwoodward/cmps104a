@@ -33,6 +33,7 @@ astree::~astree() {
 }
 
 astree* astree::adopt (astree* child1, astree* child2) {
+   //Note to self: child2 may leak memory 
    if (child1 != nullptr && child1->symbol != ';')
    {
        children.push_back (child1);
@@ -82,29 +83,27 @@ astree* astree::synthesize_root(astree* new_root){
     return new_root;
 }
 
-astree* astree::synthesize_function (int symbol,
-                                    astree* identdecl,
+astree* astree::synthesize_function (astree* identdecl,
                                     astree* func_params,
                                     astree* block){
-
-    astree* func_ast = new astree (symbol, lexer::lloc, "");
+    astree* func_ast;
+    func_ast = new astree (TOK_PROTOTYPE, lexer::lloc, "");
     func_ast->adopt(identdecl);
+    func_params->symbol = TOK_PARAMLIST;
     func_ast->adopt(func_params);
-    func_ast->adopt(block);
+
+    if(block->symbol == ';'){
+        destroy(block);
+    }
+    else
+    {
+        func_ast->symbol = TOK_FUNCTION;
+        func_ast->adopt(block);
+    }
     return func_ast;
 
 }
 
-astree* astree::synthesize_prototype (int symbol,
-                                     astree* identdecl,
-                                     astree* func_params){
-
-    astree* proto_ast = new astree (symbol, lexer::lloc, "");
-    proto_ast->adopt(identdecl);
-    proto_ast->adopt(func_params);
-    return proto_ast;
-
-}
 
 
 void astree::dump_node (FILE* outfile) {

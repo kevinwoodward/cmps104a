@@ -111,31 +111,12 @@ function
     : identdecl '(' ')' block
         {
             destroy($3);
-            $2->symbol = TOK_PARAMLIST;
-            if($4->symbol == ';')
-            {
-                destroy($4);
-                $$ = $1->synthesize_prototype(TOK_PROTOTYPE, $1, $2);
-            }
-            else
-            {
-                $$ = $1->astree::synthesize_function(
-                TOK_FUNCTION,
-                $1,
-                $2,
-                $4);
-            }
+            $$ = astree::synthesize_function($1, $2, $4);
         }
     | identdecl func_params ')' block
         {
             destroy($3);
-            if($4->symbol == ';'){
-                destroy($4);
-                $$ = $1->synthesize_prototype(TOK_PROTOTYPE, $1, $2);
-            }
-            else
-                $$ = $1->synthesize_function(TOK_FUNCTION, $1, $2, $4);
-
+            $$ = astree::synthesize_function($1, $2, $4);
         }
     ;
 
@@ -147,8 +128,7 @@ func_params
         }
     | '(' identdecl
         {
-            $1->symbol = TOK_PARAMLIST;
-            $$ = $1->adopt($2);
+            $$ = $1->adopt_sym(TOK_PARAMLIST, $2);
         }
     ;
 
