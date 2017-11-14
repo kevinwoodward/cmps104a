@@ -32,7 +32,7 @@
 %precedence TOK_IF
 %precedence TOK_ELSE
 %right  '='
-%left   TOK_EQ TOK_NE '<' TOK_LE '>' TOK_GE
+%left   TOK_EQ TOK_NE TOK_LT TOK_LE TOK_GT TOK_GE
 %left   '+' '-'
 %left   '*' '/' '%'
 %precedence  TOK_UNI
@@ -224,8 +224,8 @@ expr
     | expr TOK_NE expr          { $$ = $2->adopt ($1, $3); }
     | expr TOK_LE expr          { $$ = $2->adopt ($1, $3); }
     | expr TOK_GE expr          { $$ = $2->adopt ($1, $3); }
-    | expr '<' expr             { $$ = $2->adopt ($1, $3); }
-    | expr '>' expr             { $$ = $2->adopt ($1, $3); }
+    | expr TOK_LT expr          { $$ = $2->adopt ($1, $3); }
+    | expr TOK_GT expr          { $$ = $2->adopt ($1, $3); }
     | '+' expr %prec TOK_UNI    { $$ = $1->adopt_sym (TOK_POS, $2); }
     | '-' expr %prec TOK_UNI    { $$ = $1->adopt_sym (TOK_NEG, $2); }
     | '!' expr %prec TOK_UNI    { $$ = $1->adopt($2); }
