@@ -37,13 +37,18 @@ struct astree {
                                         astree* func_params,
                                         astree* block);
    astree* adopt_sym (astree* child, int symbol);
+   astree* adopt_ifelse (astree* predicate,
+                         astree* then_stmt,
+                         astree* else_stmt = nullptr);
    void dump_node (FILE*);
    void dump_tree (FILE*, int depth = 0);
    static void dump (FILE* outfile, astree* tree);
    static void print (FILE* outfile, astree* tree, int depth = 0);
 };
 
-void destroy (astree* tree1, astree* tree2 = nullptr);
+void destroy (astree* tree1,
+            astree* tree2 = nullptr,
+            astree* tree3 = nullptr);
 
 void errllocprintf (const location&, const char* format, const char*);
 

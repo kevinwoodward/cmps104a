@@ -213,17 +213,12 @@ ifelse
     : TOK_IF '(' expr ')' statement %prec TOK_IF
         {
             destroy($2, $4);
-            $$ = $1->adopt($3, $5);
+            $$ = $1->adopt_ifelse($3, $5);
         }
     | TOK_IF '(' expr ')' statement TOK_ELSE statement %prec TOK_ELSE
         {
-            destroy($2);
-            destroy($4);
-            destroy($6);
-            $1 = $1->adopt($3);
-            $1 = $1->adopt($5);
-            $1 = $1->adopt($7);
-            $$ = $1;
+            destroy($2, $4, $6);
+            $$ = $1->adopt_ifelse($3, $5, $7);
         }
     ;
 

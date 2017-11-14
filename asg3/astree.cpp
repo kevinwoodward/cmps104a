@@ -44,6 +44,25 @@ astree* astree::adopt (astree* child1, astree* child2) {
    return this;
 }
 
+astree* astree::adopt_ifelse (astree* predicate,
+                              astree* then_stmt,
+                              astree* else_stmt) {
+
+    if (predicate != nullptr)
+    {
+       children.push_back (predicate);
+    }
+   if (then_stmt != nullptr)
+   {
+       children.push_back (then_stmt);
+   }
+   if (else_stmt != nullptr)
+   {
+       children.push_back (else_stmt);
+   }
+   return this;
+}
+
 astree* astree::adopt_sym (astree* child, int symbol_) {
    symbol = symbol_;
    return adopt (child);
@@ -123,9 +142,10 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
    }
 }
 
-void destroy (astree* tree1, astree* tree2) {
+void destroy (astree* tree1, astree* tree2, astree* tree3) {
    if (tree1 != nullptr) delete tree1;
    if (tree2 != nullptr) delete tree2;
+   if (tree3 != nullptr) delete tree3;
 }
 
 void errllocprintf (const location& lloc, const char* format,
