@@ -36,7 +36,12 @@ struct astree {
                                         astree* identdecl,
                                         astree* func_params,
                                         astree* block);
-   astree* adopt_sym (astree* child, int symbol);
+   astree* adopt_sym (int symbol_,
+                      astree* child1,
+                      astree* child2 = nullptr);
+   astree* adopt_with_sym (int symbol_,
+                           astree* child1,
+                           astree* child2 = nullptr);
    astree* adopt_ifelse (astree* predicate,
                          astree* then_stmt,
                          astree* else_stmt = nullptr);

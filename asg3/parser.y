@@ -62,21 +62,24 @@ structdef
     : TOK_STRUCT TOK_IDENT '{' '}'
         {
             destroy ($3, $4);
-            $2->symbol = TOK_TYPEID;
-            $$ = $1->adopt($2);
+            $$ = $1->adopt_with_sym(TOK_TYPEID, $2);
         }
     | fielddecl_seq '}'
-        { destroy ($2); $$ = $1; }
+        {
+            destroy ($2);
+            $$ = $1;
+        }
     ;
 
 fielddecl_seq
     : fielddecl_seq fielddecl
-        { $$ = $1->adopt($2); }
+        {
+            $$ = $1->adopt($2);
+        }
     | TOK_STRUCT TOK_IDENT '{' fielddecl
         {
             destroy ($3);
-            $2->symbol = TOK_TYPEID;
-            $$ = $1->adopt($2, $4);
+            $$ = $1->adopt_with_sym(TOK_TYPEID, $2, $4);
         }
     ;
 
@@ -84,14 +87,12 @@ fielddecl
     : basetype TOK_IDENT ';'
         {
             destroy ($3);
-            $2->symbol = TOK_FIELD;
-            $$ = $1->adopt($2);
+            $$ = $1->adopt_with_sym(TOK_FIELD, $2);
         }
     | basetype TOK_ARRAY TOK_IDENT ';'
         {
             destroy($4);
-            $2->symbol = TOK_FIELD;
-            $$ = $2->adopt($1, $3);
+            $$ = $2->adopt_sym(TOK_FIELD ,$1, $3);
         }
     ;
 
@@ -152,13 +153,11 @@ func_params
 identdecl
     : basetype TOK_IDENT
         {
-            $2->symbol = TOK_DECLID;
-            $$ = $1->adopt($2);
+            $$ = $1->adopt_with_sym(TOK_DECLID, $2);
         }
     | basetype TOK_ARRAY TOK_IDENT
         {
-            $2->symbol = TOK_FIELD;
-            $$ = $2->adopt($1, $3);
+            $$ = $2->adopt_sym(TOK_FIELD, $1, $3);
         }
     ;
 block
@@ -179,8 +178,7 @@ statement_seq
         }
     | '{' statement
         {
-            $1->symbol = TOK_BLOCK;
-            $$ = $1->adopt($2);
+            $$ = $1->adopt_sym(TOK_BLOCK, $2);
         }
     ;
 
@@ -196,8 +194,7 @@ statement
 vardecl
     : identdecl '=' expr
         {
-            $2->symbol = TOK_VARDECL;
-            $$ = $2->adopt($1, $3);
+            $$ = $2->adopt_sym(TOK_VARDECL, $1, $3);
         }
     ;
 
@@ -225,7 +222,6 @@ ifelse
 return
     : TOK_RETURN
         {
-
             $1->symbol = TOK_RETURNVOID;
             $$ = $1;
         }
@@ -248,8 +244,8 @@ expr
     | expr TOK_GE expr          { $$ = $2->adopt ($1, $3); }
     | expr '<' expr             { $$ = $2->adopt ($1, $3); }
     | expr '>' expr             { $$ = $2->adopt ($1, $3); }
-    | '+' expr %prec TOK_UNI    { $$ = $1->adopt_sym ($2, TOK_POS); }
-    | '-' expr %prec TOK_UNI    { $$ = $1->adopt_sym ($2, TOK_NEG); }
+    | '+' expr %prec TOK_UNI    { $$ = $1->adopt_sym (TOK_POS, $2); }
+    | '-' expr %prec TOK_UNI    { $$ = $1->adopt_sym (TOK_NEG, $2); }
     | '!' expr %prec TOK_UNI    { $$ = $1->adopt($2); }
     | allocator                 { $$ = $1; }
     | call                      { $$ = $1; }
@@ -262,23 +258,17 @@ allocator
     : TOK_NEW TOK_IDENT '(' ')'
         {
             destroy($3, $4);
-            $2->symbol = TOK_TYPEID;
-            $$ = $1->adopt($2);
+            $$ = $1->adopt_with_sym(TOK_TYPEID, $2);
         }
     | TOK_NEW TOK_STRING '(' expr ')'
         {
-            destroy($2);
-            destroy($3);
-            destroy($5);
-            $1->symbol = TOK_NEWSTRING;
-            $$ = $1->adopt($4);
+            destroy($2, $3, $5);
+            $$ = $1->adopt_sym(TOK_NEWSTRING, $4);
         }
     | TOK_NEW basetype '[' expr ']'
         {
-            destroy($3);
-            destroy($5);
-            $1->symbol = TOK_NEWARRAY;
-            $$ = $1->adopt($2, $4);
+            destroy($3, $5);
+            $$ = $1->adopt_sym(TOK_NEWARRAY, $2, $4);
 
         }
     ;
@@ -287,14 +277,12 @@ call
     : TOK_IDENT '(' ')'
         {
             destroy($3);
-            $2->symbol = TOK_CALL;
-            $$ = $2->adopt($1);
+            $$ = $2->adopt_sym(TOK_CALL, $1);
         }
     | TOK_IDENT '(' call_args ')'
         {
             destroy($4);
-            $2->symbol = TOK_CALL;
-            $$ = $2->adopt($1, $3);
+            $$ = $2->adopt_sym(TOK_CALL, $1, $3);
         }
     ;
 
@@ -312,8 +300,7 @@ variable
     | expr '[' expr ']'
         {
             destroy($4);
-            $2->symbol = TOK_INDEX;
-            $$ = $2->adopt($1, $3);
+            $$ = $2->adopt_sym(TOK_INDEX, $1, $3);
         }
     | expr '.' TOK_IDENT
         {

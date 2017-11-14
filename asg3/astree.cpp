@@ -63,9 +63,18 @@ astree* astree::adopt_ifelse (astree* predicate,
    return this;
 }
 
-astree* astree::adopt_sym (astree* child, int symbol_) {
+astree* astree::adopt_sym (int symbol_,
+                           astree* child1,
+                           astree* child2){
    symbol = symbol_;
-   return adopt (child);
+   return adopt (child1, child2);
+}
+
+astree* astree::adopt_with_sym (int symbol_,
+                                astree* child1,
+                                astree* child2){
+   child1->symbol = symbol_;
+   return adopt (child1, child2);
 }
 
 astree* astree::synthesize_root(astree* new_root){
@@ -125,7 +134,7 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
    //fprintf (outfile, "; %*s", depth * 3, "");
    for(int i=0; i<depth; i++)
    {
-       fprintf(outfile, "|   ");
+       fprintf(outfile, "|  ");
    }
    if (tree == NULL)
    {
