@@ -28,7 +28,6 @@
 %token TOK_INDEX TOK_FIELD TOK_NEWSTRING TOK_RETURNVOID TOK_VARDECL
 %token TOK_FUNCTION TOK_PARAMLIST TOK_PROTOTYPE
 
-%precedence TOK_IDENT
 %precedence TOK_IF
 %precedence TOK_ELSE
 %right  '='
@@ -36,11 +35,7 @@
 %left   '+' '-'
 %left   '*' '/' '%'
 %precedence  TOK_UNI
-%precedence   '[' '.' '('
-
-
-
-
+%precedence   '[' '.'
 
 %%
 
@@ -261,10 +256,10 @@ call
             destroy($3);
             $$ = $2->adopt_sym(TOK_CALL, $1);
         }
-    | TOK_IDENT '(' call_args ')'
+    | call_args ')'
         {
-            destroy($4);
-            $$ = $2->adopt_sym(TOK_CALL, $1, $3);
+            destroy($2);
+            $$ = $1;
         }
     ;
 
@@ -274,7 +269,10 @@ call_args
             destroy($2);
             $$ = $1->adopt($3);
         }
-    | expr
+    | TOK_IDENT '(' expr
+        {
+            $$ = $2->adopt_sym(TOK_CALL, $1, $3);
+        }
     ;
 
 variable
