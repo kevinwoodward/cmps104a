@@ -33,12 +33,12 @@ astree::~astree() {
 }
 
 astree* astree::adopt (astree* child1, astree* child2) {
-   //Note to self: child2 may leak memory 
-   if (child1 != nullptr && child1->symbol != ';')
+   //Note to self: child2 may leak memory
+   if (child1 != nullptr)
    {
        children.push_back (child1);
    }
-   if (child2 != nullptr && child2->symbol != ';')
+   if (child2 != nullptr)
    {
        children.push_back (child2);
    }
