@@ -1,0 +1,87 @@
+ROOT "" 0.0.0
+|   PROTOTYPE "" 5.28.56
+|   |   VOID "void" 5.28.1
+|   |   |   DECLID "__assert_fail" 5.28.6
+|   |   PARAMLIST "(" 5.28.20
+|   |   |   STRING "string" 5.28.21
+|   |   |   |   DECLID "expr" 5.28.28
+|   |   |   |   STRING "string" 5.28.34
+|   |   |   |   |   DECLID "file" 5.28.41
+|   |   |   |   INT "int" 5.28.47
+|   |   |   |   |   DECLID "line" 5.28.51
+|   PROTOTYPE "" 5.29.18
+|   |   VOID "void" 5.29.1
+|   |   |   DECLID "putb" 5.29.6
+|   |   PARAMLIST "(" 5.29.11
+|   |   |   INT "int" 5.29.12
+|   |   |   |   DECLID "b" 5.29.16
+|   PROTOTYPE "" 5.30.18
+|   |   VOID "void" 5.30.1
+|   |   |   DECLID "putc" 5.30.6
+|   |   PARAMLIST "(" 5.30.11
+|   |   |   INT "int" 5.30.12
+|   |   |   |   DECLID "c" 5.30.16
+|   PROTOTYPE "" 5.31.18
+|   |   VOID "void" 5.31.1
+|   |   |   DECLID "puti" 5.31.6
+|   |   PARAMLIST "(" 5.31.11
+|   |   |   INT "int" 5.31.12
+|   |   |   |   DECLID "i" 5.31.16
+|   PROTOTYPE "" 5.32.21
+|   |   VOID "void" 5.32.1
+|   |   |   DECLID "puts" 5.32.6
+|   |   PARAMLIST "(" 5.32.11
+|   |   |   STRING "string" 5.32.12
+|   |   |   |   DECLID "s" 5.32.19
+|   PROTOTYPE "" 5.33.13
+|   |   VOID "void" 5.33.1
+|   |   |   DECLID "endl" 5.33.6
+|   |   PARAMLIST "(" 5.33.11
+|   PROTOTYPE "" 5.34.12
+|   |   INT "int" 5.34.1
+|   |   |   DECLID "getc" 5.34.5
+|   |   PARAMLIST "(" 5.34.10
+|   PROTOTYPE "" 5.35.15
+|   |   STRING "string" 5.35.1
+|   |   |   DECLID "getw" 5.35.8
+|   |   PARAMLIST "(" 5.35.13
+|   PROTOTYPE "" 5.36.16
+|   |   STRING "string" 5.36.1
+|   |   |   DECLID "getln" 5.36.8
+|   |   PARAMLIST "(" 5.36.14
+|   PROTOTYPE "" 5.37.20
+|   |   FIELD "[]" 5.37.7
+|   |   |   STRING "string" 5.37.1
+|   |   |   IDENT "getargv" 5.37.10
+|   |   PARAMLIST "(" 5.37.18
+|   PROTOTYPE "" 5.38.23
+|   |   VOID "void" 5.38.1
+|   |   |   DECLID "exit" 5.38.6
+|   |   PARAMLIST "(" 5.38.11
+|   |   |   INT "int" 5.38.12
+|   |   |   |   DECLID "status" 5.38.16
+|   VARDECL "=" 6.5.7
+|   |   INT "int" 6.5.1
+|   |   |   DECLID "a" 6.5.5
+|   |   INTCON "3" 6.5.9
+|   VARDECL "=" 6.6.7
+|   |   INT "int" 6.6.1
+|   |   |   DECLID "b" 6.6.5
+|   |   INTCON "8" 6.6.9
+|   VARDECL "=" 6.7.7
+|   |   INT "int" 6.7.1
+|   |   |   DECLID "c" 6.7.5
+|   |   '+' "+" 6.7.11
+|   |   |   IDENT "a" 6.7.9
+|   |   |   IDENT "b" 6.7.13
+|   '=' "=" 6.8.3
+|   |   IDENT "a" 6.8.1
+|   |   '+' "+" 6.8.7
+|   |   |   IDENT "b" 6.8.5
+|   |   |   IDENT "c" 6.8.9
+|   CALL "(" 6.9.6
+|   |   IDENT "puti" 6.9.1
+|   |   IDENT "a" 6.9.7
+|   CALL "(" 6.10.6
+|   |   IDENT "putc" 6.10.1
+|   |   CHARCON "'\n'" 6.10.7
