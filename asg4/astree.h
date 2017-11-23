@@ -6,15 +6,22 @@
 
 #include <string>
 #include <vector>
+#include <bitset>
 using namespace std;
 
 #include "auxlib.h"
+
+enum { ATTR_void, ATTR_int, ATTR_null, ATTR_string, ATTR_struct,
+ATTR_array, ATTR_function, ATTR_variable, ATTR_field, ATTR_typeid,
+ATTR_param, ATTR_lval, ATTR_const, ATTR_vreg, ATTR_vaddr, ATTR_bitset_size };
+using attr_bitset = bitset<ATTR_bitset_size>;
 
 struct location {
    size_t filenr;
    size_t linenr;
    size_t offset;
 };
+
 
 struct astree {
 
@@ -23,6 +30,8 @@ struct astree {
    location lloc;            // source location
    const string* lexinfo;    // pointer to lexical information
    vector<astree*> children; // children of this n-way node
+   attr_bitset attributes;
+   int block_nr = 0;
 
    // Functions.
    astree (int symbol, const location&, const char* lexinfo);
@@ -33,6 +42,7 @@ struct astree {
    static astree* synthesize_function (astree* identdecl,
                                        astree* func_params,
                                        astree* block);
+
    astree* adopt_sym (int symbol_,
                       astree* child1,
                       astree* child2 = nullptr);
@@ -47,6 +57,7 @@ struct astree {
    static void dump (FILE* outfile, astree* tree);
    static void print (FILE* outfile, astree* tree, int depth = 0);
 };
+
 
 void destroy (astree* tree1,
             astree* tree2 = nullptr,

@@ -21,6 +21,7 @@ using namespace std;
 #include "string_set.h"
 //#include "yyparse.cpp"
 #include "lyutils.h"
+#include "symtable.h"
 
 const string CPP = "/usr/bin/cpp -nostdinc ";
 constexpr size_t LINESIZE = 1024;
@@ -44,7 +45,7 @@ void cpplines(FILE* pipe, const char* filename)
     strcpy(inputname, filename);
 
     yyparse();
-
+    postorder(parser::root);
     for (;;) {
         break;
         char buffer[LINESIZE];
