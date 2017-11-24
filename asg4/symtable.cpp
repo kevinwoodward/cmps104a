@@ -31,6 +31,20 @@ void postorder (astree* tree) {
    // Call switch func to set attr + typecheck
 }
 
+symbol* create_symbol (astree* node)
+{
+    symbol* sym = new symbol;
+    sym->attributes = node->attributes;
+    sym->fields = nullptr; //TODO: is this correct?
+    sym->filenr = node->lloc.filenr;
+    sym->linenr = node->lloc.linenr;
+    sym->offset = node->lloc.offset; //OFFSET WOO WOO WOO WOO WOO
+    sym->block_nr = node->block_nr;
+    sym->parameters = nullptr; //TODO: is this correct?
+
+    return sym;
+}
+
 void insert_into_struct_table (symbol_table* table, astree* node)
 {
     symbol_table* field_table = new symbol_table();
@@ -150,17 +164,24 @@ void set_attributes (astree* node)
             break;
         case TOK_VARDECL:
             // enter into identifier symbol table1
+
             if(symbol_stack.back() == nullptr)
             {
                 //create new symbol table and push onto stack
                 //push symbol on newly created symbol table
+                symbol* temp_symbol = create_symbol(node); //TODO: duplicate declaration because can't declare in switch stmt
+                symbol_table* temp_table = new symbol_table();
+                temp_table->insert (symbol_entry (node->lexinfo, temp_symbol)); //TODO: symbol_entry correct?
+                symbol_stack.push_back(temp_table);
             }
             else
             {
-                //push symbol on newly created symbol table
+                //push symbol on existing top symbol table
+                symbol* temp_symbol = create_symbol(node); //TODO: duplicate declaration because can't declare in switch stmt
+                (symbol_stack.back())->insert (symbol_entry (node->lexinfo, temp_symbol));
             }
 
-            //look up in type names table1//
+            //look up in type names table
             //if struct do for loop
             break;
         case TOK_WHILE:
