@@ -21,7 +21,8 @@ symbol_table* struct_table = new symbol_table();
 vector<symbol_table*> symbol_stack;
 int next_block = 0;
 
-void postorder (astree* tree) {
+void postorder (astree* tree)
+{
    assert (tree != nullptr);
 
    for (size_t child = 0; child < tree->children.size(); ++child) {
@@ -30,6 +31,34 @@ void postorder (astree* tree) {
    printf("\n%d\n", tree->symbol);
    // Call switch func to set attr + typecheck
 }
+
+symbol* table_find_var(symbol_table* table, astree* node)
+{
+    if ((table->count (node->lexinfo) == 0) || (table->empty())) { //TODO: is the table-> empty case really needed?
+        return nullptr;
+    }
+    return (table->find (node->lexinfo))->second;
+}
+
+
+symbol* stack_find_var(astree* node)
+{
+    for(auto table : symbol_stack) //TODO: will this go from most local to global scope??
+    {
+        if(table != nullptr)
+        {
+            if(!(table->empty()))
+            {
+                if (table_find_var(table, node) != nullptr)
+                {
+                    return table_find_var(table, node);
+                }
+            }
+        }
+    }
+    return nullptr;
+}
+
 
 symbol* create_symbol (astree* node)
 {
@@ -43,6 +72,15 @@ symbol* create_symbol (astree* node)
     sym->parameters = nullptr; //TODO: is this correct?
 
     return sym;
+}
+
+void adopt_attrs (astree* parent, astree* child)
+{
+    for (int i = 0; i < ATTR_bitset_size; i++) {
+        if (child->attributes[i] == 1) {
+            parent->attributes.set(i);
+        }
+    }
 }
 
 void insert_into_struct_table (symbol_table* table, astree* node)
@@ -107,6 +145,8 @@ void set_attributes (astree* node)
         right = node->children[2];
     }
 
+    symbol* temp_symbol;
+
     switch (node->symbol) {
         case TOK_ROOT:
             break;
@@ -123,18 +163,45 @@ void set_attributes (astree* node)
 
             break;
         case TOK_IDENT:
+            // Get attributes from symtab stack
+            temp_symbol = stack_find_var(node);
+            //TODO: if temp_symbol is null then check types
+                //if null after that, throw error: "not found"
+            node->attributes = temp_symbol->attributes;
             break;
         case TOK_TYPEID:
+            node->attributes.set(ATTR_typeid);
             break;
         case TOK_FIELD:
+            node->attributes.set (ATTR_field);
+            //TODO: idk lol see the pdf table fig1
             break;
         case TOK_ARRAY:
+            left->attributes.set(ATTR_array);
+            if (left == nullptr || left->children.empty())
+            {
+                break;
+            }
+            left->children[0]->attributes.set (ATTR_array);
             break;
         case TOK_VOID:
+            left->attributes.set(ATTR_void);
             break;
         case TOK_INT:
+            if(left == nullptr)
+            {
+                break;
+            }
+            left->attributes.set(ATTR_int);
+            //TODO: inherit type
             break;
         case TOK_STRING:
+            if(left == nullptr)
+            {
+                break;
+            }
+            left->attributes.set(ATTR_string);
+            //TODO: inherit type
             break;
         case TOK_FUNCTION:
             // enter new block
@@ -153,6 +220,7 @@ void set_attributes (astree* node)
             }
             break;
         case TOK_PROTOTYPE:
+
             break;
         case TOK_PARAMLIST:
             break;
@@ -164,12 +232,14 @@ void set_attributes (astree* node)
             break;
         case TOK_VARDECL:
             // enter into identifier symbol table1
-
+            left->children[0]->attributes.set(ATTR_lval);
+            left->children[0]->attributes.set(ATTR_variable);
+            adopt_attrs(node, left); //Why is this needed?
             if(symbol_stack.back() == nullptr)
             {
                 //create new symbol table and push onto stack
                 //push symbol on newly created symbol table
-                symbol* temp_symbol = create_symbol(node); //TODO: duplicate declaration because can't declare in switch stmt
+                temp_symbol = create_symbol(node); //TODO: duplicate declaration because can't declare in switch stmt
                 symbol_table* temp_table = new symbol_table();
                 temp_table->insert (symbol_entry (node->lexinfo, temp_symbol)); //TODO: symbol_entry correct?
                 symbol_stack.push_back(temp_table);
@@ -177,7 +247,7 @@ void set_attributes (astree* node)
             else
             {
                 //push symbol on existing top symbol table
-                symbol* temp_symbol = create_symbol(node); //TODO: duplicate declaration because can't declare in switch stmt
+                temp_symbol = create_symbol(node); //TODO: duplicate declaration because can't declare in switch stmt
                 (symbol_stack.back())->insert (symbol_entry (node->lexinfo, temp_symbol));
             }
 
@@ -185,28 +255,41 @@ void set_attributes (astree* node)
             //if struct do for loop
             break;
         case TOK_WHILE:
+            //TODO: check condition?
             break;
         case TOK_IF:
+            //TODO: check condition?
             break;
-        case TOK_ELSE:
+        case TOK_IFELSE: //TODO: changed from else. SHould be else or ifelse?
+            //TODO: check condition?
             break;
         case TOK_RETURN:
             break;
         case TOK_RETURNVOID:
             break;
         case '=':
+            if(left == nullptr)
+            {
+                break;
+            }
+            //TODO inherit type, typecheck operands
             break;
         case '+':
+            //TODO: should be same as -
             break;
         case '-':
+            //TODO: should be same as +
             break;
         case '*':
+            //TODO: should be same as / and %
             break;
         case '/':
+            //TODO: should be same as * and %
             break;
         case '%':
+            //TODO: should be same as / and *
             break;
-        case TOK_EQ:
+        case TOK_EQ: //TODO: i think nothing is needed for these comparison ops.
             break;
         case TOK_NE:
             break;
@@ -219,28 +302,50 @@ void set_attributes (astree* node)
         case TOK_GT:
             break;
         case TOK_POS:
+            //TODO: not necessary i think
             break;
         case TOK_NEG:
+            //TODO: not necessary i think
             break;
         case '!':
+            node->attributes.set (ATTR_vreg);
+            //TODO: set attribute for type int? since there is no bool
+            //TODO: check type of operand
             break;
         case TOK_NEW:
+            //TODO: inherit attribs
             break;
         case TOK_NEWSTRING:
+            node->attributes.set (ATTR_vreg);
+            node->attributes.set (ATTR_string);
             break;
         case TOK_NEWARRAY:
+            node->attributes.set (ATTR_vreg);
+            node->attributes.set (ATTR_array);
+            //TODO: inherit type
             break;
         case TOK_CALL:
+            //TODO: all of it.
             break;
         case TOK_INDEX:
+            node->attributes.set (ATTR_lval);
+            node->attributes.set (ATTR_vaddr);
             break;
         case TOK_INTCON:
+            node->attributes.set (ATTR_int);
+            node->attributes.set (ATTR_const);
             break;
         case TOK_CHARCON:
+            node->attributes.set (ATTR_int); //no char attr
+            node->attributes.set (ATTR_const);
             break;
         case TOK_STRINGCON:
+            node->attributes.set (ATTR_string);
+            node->attributes.set (ATTR_const);
             break;
         case TOK_NULL:
+            node->attributes.set (ATTR_null);
+            node->attributes.set (ATTR_const);
             break;
     }
 }
