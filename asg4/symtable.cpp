@@ -729,7 +729,7 @@ this is called after the parser.y returns the tree
 to main, then we call this with the tree and outfile
 */
 
-void postorder (astree* tree)
+void traverse (astree* tree)
 {
    if (tree == nullptr)
    {
@@ -741,20 +741,22 @@ void postorder (astree* tree)
         || tree->symbol == TOK_PROTOTYPE)
    {
        new_block();
-   }
-   for (size_t child = 0; child < tree->children.size(); ++child) {
-      postorder(tree->children.at(child));
-   }
-   printf("\n%d\n", tree->symbol);
-   // Call switch func to set attr + typecheck
-   set_attributes(tree);
-   if(tree->symbol == TOK_BLOCK
-        || tree->symbol == TOK_PARAMLIST
-        || tree->symbol == TOK_FUNCTION
-        || tree->symbol == TOK_PROTOTYPE)
-   {
+       set_attributes(tree);
+       for (size_t child = 0; child < tree->children.size(); ++child) {
+          traverse(tree->children.at(child));
+       }
        exit_block();
    }
+   else
+   {
+       for (size_t child = 0; child < tree->children.size(); ++child) {
+          traverse(tree->children.at(child));
+       }
+       set_attributes(tree);
+       printf("\n%d\n", tree->symbol);
+   }
+   // Call switch func to set attr + typecheck
+
 
 }
 
@@ -762,6 +764,6 @@ void postorder (astree* tree)
 void symbol_typecheck(astree* tree)
 {
     symbol_stack.push_back(new symbol_table());
-    postorder(tree);
+    traverse(tree);
     print_stack();
 }
