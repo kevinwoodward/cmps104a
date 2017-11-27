@@ -45,7 +45,7 @@ void cpplines(FILE* pipe, const char* filename)
     strcpy(inputname, filename);
 
     yyparse();
-    postorder(parser::root);
+    //postorder(parser::root);
     for (;;) {
         break;
         char buffer[LINESIZE];
@@ -152,6 +152,8 @@ int main(int argc, char** argv)
         FILE *astFile = fopen (astFilename.c_str(), "w+");
         astree::print(astFile, parser::root, 0);
         fclose(astFile);
+
+        symbol_typecheck(parser::root);
 
         if(pcloseVal != 0) exec::exit_status = EXIT_FAILURE;
     }

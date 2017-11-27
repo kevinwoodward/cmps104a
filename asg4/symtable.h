@@ -24,9 +24,9 @@ struct symbol {
 };
 
 using symbol_table = unordered_map<const string*,symbol*>;
-using symbol_entry = pair<const string*,symbol*>;
+using symbol_entry = symbol_table::value_type;
 
-void postorder (astree* tree);
+void symbol_typecheck (astree* tree);
 
 
 #endif

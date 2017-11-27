@@ -134,7 +134,8 @@ identdecl
         }
     | basetype TOK_ARRAY TOK_IDENT
         {
-            $$ = $2->adopt_sym(TOK_FIELD, $1, $3);
+            $3->symbol = TOK_DECLID;
+            $$ = $2->adopt($1, $3);
         }
     ;
 block

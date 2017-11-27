@@ -17,42 +17,49 @@
 
 using namespace std;
 
+// Definition: struct foo { int a;} <- in struct table
+// Declaraction: foo a; <- in variable table
+
 symbol_table* struct_table = new symbol_table();
+symbol_table* type_table = new symbol_table();
 vector<symbol_table*> symbol_stack;
 int next_block = 0;
 
-void postorder (astree* tree)
+void new_block()
 {
-   assert (tree != nullptr);
+    next_block++;
+    symbol_stack.push_back(nullptr);
+}
 
-   for (size_t child = 0; child < tree->children.size(); ++child) {
-      postorder(tree->children.at(child));
-   }
-   printf("\n%d\n", tree->symbol);
-   // Call switch func to set attr + typecheck
+void exit_block()
+{
+    symbol_stack.pop_back();
 }
 
 symbol* table_find_var(symbol_table* table, astree* node)
 {
-    if ((table->count (node->lexinfo) == 0) || (table->empty())) { //TODO: is the table-> empty case really needed?
+    auto symbol_iter = (table->find(node->lexinfo));
+    if (symbol_iter == table->end())  //TODO: is the table-> empty case really needed?
+    {
         return nullptr;
     }
     return (table->find (node->lexinfo))->second;
 }
 
 
+
 symbol* stack_find_var(astree* node)
 {
-    for(auto table : symbol_stack) //TODO: will this go from most local to global scope??
+    symbol_table* current_table = nullptr;
+    for(int i = symbol_stack.size() - 1; i >= 0; i--)
     {
-        if(table != nullptr)
+        current_table = symbol_stack[i];
+        if(current_table != nullptr)
         {
-            if(!(table->empty()))
+            if(!(current_table->empty()))
             {
-                if (table_find_var(table, node) != nullptr)
-                {
-                    return table_find_var(table, node);
-                }
+
+                return table_find_var(current_table, node);
             }
         }
     }
@@ -74,11 +81,11 @@ symbol* create_symbol (astree* node)
     return sym;
 }
 
-void adopt_attrs (astree* parent, astree* child)
+void copy_attrs (astree* src, astree* dest)
 {
     for (int i = 0; i < ATTR_bitset_size; i++) {
-        if (child->attributes[i] == 1) {
-            parent->attributes.set(i);
+        if (src->attributes[i] == 1) {
+            dest->attributes.set(i);
         }
     }
 }
@@ -130,10 +137,11 @@ void insert_into_struct_table (symbol_table* table, astree* node)
 */
 void set_attributes (astree* node)
 {
-    astree* left;
-    astree* middle;
-    astree* right;
+    astree* left = nullptr;
+    astree* middle = nullptr;
+    astree* right = nullptr;
     //symbol* symbol;
+
     if (node->children.size() > 0) {
         left = node->children[0];
     }
@@ -145,13 +153,15 @@ void set_attributes (astree* node)
         right = node->children[2];
     }
 
-    symbol* temp_symbol;
+    symbol* temp_symbol = nullptr;
+    symbol* field_symbol = nullptr;
 
     switch (node->symbol) {
         case TOK_ROOT:
             break;
         case TOK_STRUCT:
-            // insert into type name table
+            //TODO: i think this whole logic is wrong
+            //TODO: insert into type name table
             // insert into struct table with all other defs
             left->attributes.set(ATTR_typeid);
             for (auto child : node->children) {
@@ -160,14 +170,24 @@ void set_attributes (astree* node)
                 child->attributes.set(ATTR_field);
             }
             insert_into_struct_table(struct_table, node);
+            //insert_into_type_table(type_table, node->children[0]);
 
             break;
         case TOK_IDENT:
             // Get attributes from symtab stack
-            temp_symbol = stack_find_var(node);
             //TODO: if temp_symbol is null then check types
                 //if null after that, throw error: "not found"
-            node->attributes = temp_symbol->attributes;
+
+
+            temp_symbol = stack_find_var(node);
+            if(temp_symbol != nullptr)
+            {
+                node->attributes = temp_symbol->attributes;
+            }
+            else if(node->attributes[ATTR_int] || node->attributes[ATTR_void])
+            {
+                printf("error\n"); //TODO: no print to stdout
+            }
             break;
         case TOK_TYPEID:
             node->attributes.set(ATTR_typeid);
@@ -175,14 +195,32 @@ void set_attributes (astree* node)
         case TOK_FIELD:
             node->attributes.set (ATTR_field);
             //TODO: idk lol see the pdf table fig1
-            break;
-        case TOK_ARRAY:
-            left->attributes.set(ATTR_array);
-            if (left == nullptr || left->children.empty())
+            if(node->children.size() == 0)
             {
                 break;
             }
-            left->children[0]->attributes.set (ATTR_array);
+            temp_symbol = stack_find_var(left);
+            if(temp_symbol)
+            {
+                if(temp_symbol->attributes[ATTR_struct])
+                {
+                    field_symbol = table_find_var(temp_symbol->fields,
+                                                  right);
+                    node->attributes = field_symbol->attributes;
+                }
+                else
+                {
+                    fprintf(stderr, "Sorry it's not a struct\n");
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Sorry doesn't exist, line:5:3\n");
+            }
+            break;
+        case TOK_ARRAY:
+            copy_attrs(left, node);
+            node->attributes.set(ATTR_array);
             break;
         case TOK_VOID:
             left->attributes.set(ATTR_void);
@@ -204,7 +242,7 @@ void set_attributes (astree* node)
             //TODO: inherit type
             break;
         case TOK_FUNCTION:
-            // enter new block
+            new_block();
             // func
             //      name = left
             //      paramlist = middle '('
@@ -220,22 +258,21 @@ void set_attributes (astree* node)
             }
             break;
         case TOK_PROTOTYPE:
-
+            //TODO: check proto
             break;
         case TOK_PARAMLIST:
             break;
         case TOK_DECLID:
             break;
         case TOK_BLOCK:
-            symbol_stack.push_back(nullptr);
-            next_block += 1;
+            new_block();
             break;
         case TOK_VARDECL:
             // enter into identifier symbol table1
             left->children[0]->attributes.set(ATTR_lval);
             left->children[0]->attributes.set(ATTR_variable);
-            adopt_attrs(node, left); //Why is this needed?
-            if(symbol_stack.back() == nullptr)
+            copy_attrs(left, node); //Why is this needed?
+            if(symbol_stack.size() == 0 || symbol_stack.back() == nullptr)
             {
                 //create new symbol table and push onto stack
                 //push symbol on newly created symbol table
@@ -260,8 +297,7 @@ void set_attributes (astree* node)
         case TOK_IF:
             //TODO: check condition?
             break;
-        case TOK_IFELSE: //TODO: changed from else. SHould be else or ifelse?
-            //TODO: check condition?
+        case TOK_ELSE: //TODO: changed from else. SHould be else or ifelse?
             break;
         case TOK_RETURN:
             break;
@@ -359,7 +395,25 @@ Here we need code to do a traversal
 through the astree and set the different attributes
 this is called after the parser.y returns the tree
 to main, then we call this with the tree and outfile
-
-
-
 */
+
+void postorder (astree* tree)
+{
+   if (tree == nullptr)
+   {
+        printf("Tree is null"); //TODO: remove this when done
+   }
+
+   for (size_t child = 0; child < tree->children.size(); ++child) {
+      postorder(tree->children.at(child));
+   }
+   printf("\n%d\n", tree->symbol);
+   // Call switch func to set attr + typecheck
+   set_attributes(tree);
+}
+
+void symbol_typecheck(astree* tree)
+{
+    symbol_stack.push_back(new symbol_table());
+    postorder(tree);
+}
