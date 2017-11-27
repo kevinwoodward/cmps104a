@@ -146,6 +146,8 @@ int main(int argc, char** argv)
         int pcloseVal = pclose(yyin);
         fclose(nfile);
 
+        symbol_typecheck(parser::root);
+
         string astFilename = filename;
         astFilename.erase(astFilename.end()-3, astFilename.end());
         astFilename.append(".ast");
@@ -153,7 +155,7 @@ int main(int argc, char** argv)
         astree::print(astFile, parser::root, 0);
         fclose(astFile);
 
-        symbol_typecheck(parser::root);
+
 
         if(pcloseVal != 0) exec::exit_status = EXIT_FAILURE;
     }

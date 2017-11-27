@@ -32,6 +32,26 @@ astree::~astree() {
    }
 }
 
+const char* get_attributes (attr_bitset attributes) {
+    string str = "";
+
+    if (attributes.test (ATTR_void))        str += "void ";
+    if (attributes.test (ATTR_int))         str += "int ";
+    if (attributes.test (ATTR_null))        str += "null ";
+    if (attributes.test (ATTR_string))      str += "string ";
+    if (attributes.test (ATTR_struct))      str += "struct ";
+    if (attributes.test (ATTR_array))       str += "array ";
+    if (attributes.test (ATTR_function))    str += "function ";
+    if (attributes.test (ATTR_variable))    str += "variable ";
+    if (attributes.test (ATTR_typeid))      str += "typeid ";
+    if (attributes.test (ATTR_param))       str += "param ";
+    if (attributes.test (ATTR_lval))        str += "lval ";
+    if (attributes.test (ATTR_const))       str += "const ";
+    if (attributes.test (ATTR_vreg))        str += "vreg ";
+    if (attributes.test (ATTR_vaddr))       str += "vaddr ";
+
+    return str.c_str();
+}
 
 astree* astree::adopt (astree* child1, astree* child2) {
    //Note to self: child2 may leak memory
@@ -143,9 +163,11 @@ void astree::print (FILE* outfile, astree* tree, int depth) {
    }
    char *tname = const_cast<char*>(parser::get_tname (tree->symbol));
    if(strstr (tname, "TOK_") == tname) tname += 4;
-   fprintf (outfile, "%s \"%s\" %zd.%zd.%zd\n",
+   fprintf (outfile, "%s \"%s\" %zd.%zd.%zd %s\n",
             tname, tree->lexinfo->c_str(),
-            tree->lloc.filenr, tree->lloc.linenr, tree->lloc.offset);
+            tree->lloc.filenr, tree->lloc.linenr, tree->lloc.offset,
+            get_attributes(tree->attributes));
+
    for (astree* child: tree->children) {
       astree::print (outfile, child, depth + 1);
    }
