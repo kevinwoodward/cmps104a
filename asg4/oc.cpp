@@ -146,7 +146,12 @@ int main(int argc, char** argv)
         int pcloseVal = pclose(yyin);
         fclose(nfile);
 
-        symbol_typecheck(parser::root);
+        string symFilename = filename;
+        symFilename.erase(symFilename.end()-3, symFilename.end());
+        symFilename.append(".sym");
+        FILE *symFile = fopen (symFilename.c_str(), "w+");
+        symbol_typecheck(parser::root, symFile);
+        fclose(symFile);
 
         string astFilename = filename;
         astFilename.erase(astFilename.end()-3, astFilename.end());

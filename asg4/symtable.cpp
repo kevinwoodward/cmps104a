@@ -20,13 +20,42 @@ using namespace std;
 
 // Definition: struct foo { int a;} <- in struct table
 // Declaraction: foo a; <- in variable table
+FILE* symfile;
 
 symbol_table* struct_table = new symbol_table();
 symbol_table* type_table = new symbol_table();
 vector<symbol_table*> symbol_stack;
 int next_block = 0;
 
+void print_symbol (FILE* outfile, astree* node) {
+    attr_bitset attributes = node->attributes;
 
+    if (node->attributes[ATTR_struct]) {
+        fprintf (outfile, "\n");
+    } else {
+        fprintf (outfile, "    ");
+    }
+
+    if (node->attributes[ATTR_field]) {
+        fprintf (outfile, "%s (%zu.%zu.%zu) field {%s} ",
+            (node->lexinfo)->c_str(),
+            node->lloc.linenr, node->lloc.filenr, node->lloc.offset,
+            "current struct");
+    } else {
+        fprintf (outfile, "%s (%zu.%zu.%zu) {%d} ",
+            (node->lexinfo)->c_str(),
+            node->lloc.linenr, node->lloc.filenr, node->lloc.offset,
+            node->block_nr);
+    }
+
+    if (node->attributes[ATTR_struct]) {
+        fprintf (outfile, "struct \"%s\" ",
+            (node->lexinfo)->c_str());
+
+    }
+
+    fprintf (outfile, "%s\n", get_attributes (attributes));
+}
 
 void print_stack()
 {
@@ -55,6 +84,7 @@ void print_stack()
 
 void new_block()
 {
+
     next_block++;
     symbol_stack.push_back(nullptr);
 }
@@ -63,10 +93,7 @@ void exit_block()
 {
     //cout << "before exit:\n";
     //print_stack();
-    while(symbol_stack.back() == nullptr)
-    {
-        symbol_stack.pop_back();
-    }
+
     symbol_stack.pop_back();
     //cout << "after exit:\n";
     //print_stack();
@@ -189,7 +216,7 @@ void define_ident (astree* node) {
         symbol_stack.pop_back();
         symbol_stack.push_back( new symbol_table ());
     }
-    symbol_table* table= symbol_stack.back();
+    symbol_table* table = symbol_stack.back();
     insert_symbol (table, node);
 }
 
@@ -329,14 +356,17 @@ void set_attributes (astree* node)
         case TOK_ROOT:
             break;
         case TOK_STRUCT:
-            //TODO: i think this whole logic is wrong
             //TODO: insert into type name table
             // insert into struct table with all other defs
+            cout << "PRINTING TO STRUCT TABLE\n";
+            node->attributes.set(ATTR_struct);
             left->attributes.set(ATTR_typeid);
+            print_symbol(symfile, left);
             for (auto child : node->children) {
                 if(child == node->children[0])
                     continue;
                 child->attributes.set(ATTR_field);
+                //print_symbol(symfile, left->children[0]);  //TODO: this is correct but errors because traversal is wrong
             }
             insert_into_struct_table(struct_table, node);
             //insert_into_type_table(type_table, node->children[0]);
@@ -356,6 +386,7 @@ void set_attributes (astree* node)
             else
             {
                 cerr << "undeclared identifier: " << *node->lexinfo << "\n";
+                exec::exit_status = 1;
             }
             break;
         case TOK_TYPEID:
@@ -439,6 +470,8 @@ void set_attributes (astree* node)
 
             }
 
+            print_symbol(symfile, left->children[0]);
+
 
             for (auto child : middle->children) {
                 child->children[0]->attributes.set(ATTR_variable);
@@ -446,6 +479,7 @@ void set_attributes (astree* node)
                 child->children[0]->attributes.set(ATTR_lval); // page 3, 2.2(d)
                 //inset into current scope
                 define_ident(child->children[0]);
+                print_symbol(symfile, child->children[0]);
             }
 
             temp_symbol = table_find_var(symbol_stack[0], left->children[0]);
@@ -457,11 +491,13 @@ void set_attributes (astree* node)
                                         left->attributes))
                     {
                         cerr << "incompatible prototype due to ret type";
+                        exec::exit_status = 1;
                     }
                 if(!compare_params(temp_symbol->parameters,
                                     paramTree_to_symbolVec(middle)))
                     {
                         cerr << "incompatible prototype due to params";
+                        exec::exit_status = 1;
                     }
 
 
@@ -470,6 +506,8 @@ void set_attributes (astree* node)
             insert_symbol(symbol_stack[0],
                           left->children[0],
                           paramTree_to_symbolVec(middle));
+
+            print_symbol(symfile, node);
 
             //set_attributes(right); //this is the block
             // we can recurr over the switch and now handle it in
@@ -486,6 +524,7 @@ void set_attributes (astree* node)
                     cerr << "incompatible return type";
                     cerr << "\n" << return_Node->attributes<< "\n";
                     cerr << "\n" << left->children[0]->attributes<< "\n";
+                    exec::exit_status = 1;
                 }
                 /*
                     enum { ATTR_void, ATTR_int, ATTR_null, ATTR_string, ATTR_struct,
@@ -521,12 +560,15 @@ void set_attributes (astree* node)
                 left->children[0]->attributes.set(ATTR_struct);
             }
 
+            print_symbol(symfile, left->children[0]);
+
 
             for (auto child : right->children) {
                 child->children[0]->attributes.set(ATTR_variable);
                 child->children[0]->attributes.set(ATTR_param);
                 child->children[0]->attributes.set(ATTR_lval); // page 3, 2.2(d)
                 define_ident(child->children[0]);
+                print_symbol(symfile, child->children[0]);
             }
 
             insert_symbol(symbol_stack[0],
@@ -575,15 +617,17 @@ void set_attributes (astree* node)
                     cerr << "error, incompatible types in assignment\n";
                     cerr << *left->lexinfo << " : " << *right->lexinfo;
                     cerr << " " << left->attributes << " : " << right->attributes;
+                    exec::exit_status = 1;
                 }
             if(symbol_stack.size() == 0 || symbol_stack.back() == nullptr)
             {
                 //create new symbol table and push onto stack
                 //push symbol on newly created symbol table
-                temp_symbol = create_symbol(left->children[0]); //TODO: duplicate declaration because can't declare in switch stmt
+                temp_symbol = create_symbol(left->children[0]);
                 symbol_table* temp_table = new symbol_table();
                 temp_table->insert (symbol_entry (left->children[0]->lexinfo, temp_symbol)); //TODO: symbol_entry correct?
                 symbol_stack.push_back(temp_table);
+                print_symbol(symfile, left->children[0]);
             }
             else if(table_find_var(symbol_stack.back(), left->children[0])) //checks table of current scope for var
             {
@@ -593,6 +637,7 @@ void set_attributes (astree* node)
             {
                 temp_symbol = create_symbol(left->children[0]);
                 (symbol_stack.back())->insert (symbol_entry (left->children[0]->lexinfo, temp_symbol));
+                print_symbol(symfile, left->children[0]);
             }
 
             //look up in type names table
@@ -600,7 +645,8 @@ void set_attributes (astree* node)
             break;
         case TOK_WHILE:
             if(left->attributes[ATTR_void]){
-                cerr << "Error not bool\n"; //TODO finish error
+                cerr << "Error not bool\n";
+                exec::exit_status = 1;
             }
             set_attributes(right); //here we recurr on stmt or block
             break;
@@ -609,6 +655,7 @@ void set_attributes (astree* node)
             //TODO also check if referenct type
             if(left->attributes[ATTR_void]){
                 cerr << "Error not bool\n"; //TODO finish error
+                exec::exit_status = 1;
             }
             if(middle) set_attributes(middle);
             if(right) set_attributes(right);
@@ -618,7 +665,7 @@ void set_attributes (astree* node)
         case TOK_RETURN:
             // I think we should check it in Qtion yyoure right.
             copy_attrs(left, node);
-            node->attributes.set(ATTR_struct);
+            node->attributes.set(ATTR_struct); //TODO: why is this struct?????? @jose
             break;
         case TOK_RETURNVOID:
             node->attributes.set(ATTR_void);
@@ -631,6 +678,7 @@ void set_attributes (astree* node)
                     cerr << "error, incompatible types in assignment\n";
                     cerr << *left->lexinfo << " : " << *right->lexinfo;
                     cerr << " " << left->attributes << " : " << right->attributes;
+                    exec::exit_status = 1;
                 }
             break;
         case '-':
@@ -648,10 +696,12 @@ void set_attributes (astree* node)
                     cerr << "error, incompatible types in addition\n";
                     cerr << *left->lexinfo << " : " << *right->lexinfo;
                     cerr <<  " " <<left->attributes << " : " << right->attributes;
+                    exec::exit_status = 1;
                     break;
                 }
             copy_attrs(left, node);
             cerr << *node->lexinfo << ": atribs:" << node->attributes << "\n";
+            exec::exit_status = 1;
             break;
         case TOK_EQ:
         case TOK_NE:
@@ -664,6 +714,7 @@ void set_attributes (astree* node)
             if(!compatible_Primitives(left->attributes, right->attributes))
             {
                 cerr << "incompatible types for comparison";
+                exec::exit_status = 1;
             }
             break;
         case TOK_NEG:
@@ -674,6 +725,7 @@ void set_attributes (astree* node)
             if(!left->attributes[ATTR_int])
             {
                 cerr << "trying to use increment/decrement on non-int";
+                exec::exit_status = 1;
             }
             else
             {
@@ -718,10 +770,6 @@ void set_attributes (astree* node)
     }
 }
 
-void set_attrib_to_children(astree* node) {
-
-}
-
 /*
 Here we need code to do a traversal
 through the astree and set the different attributes
@@ -736,33 +784,35 @@ void traverse (astree* tree)
         printf("Tree is null"); //TODO: remove this when done
    }
    if(tree->symbol == TOK_BLOCK
-        || tree->symbol == TOK_PARAMLIST
-        || tree->symbol == TOK_FUNCTION
-        || tree->symbol == TOK_PROTOTYPE)
+         || tree->symbol == TOK_PARAMLIST
+         || tree->symbol == TOK_FUNCTION
+         || tree->symbol == TOK_PROTOTYPE)
    {
+       cout << "new block: number is " << next_block << "\n";
        new_block();
-       set_attributes(tree);
-       for (size_t child = 0; child < tree->children.size(); ++child) {
+       tree->block_nr = next_block;
+
+       for (size_t child = 0; child < tree->children.size(); child++) {
           traverse(tree->children.at(child));
        }
+       set_attributes(tree);
        exit_block();
    }
    else
    {
-       for (size_t child = 0; child < tree->children.size(); ++child) {
+       for (size_t child = 0; child < tree->children.size(); child++) {
           traverse(tree->children.at(child));
        }
        set_attributes(tree);
        printf("\n%d\n", tree->symbol);
    }
-   // Call switch func to set attr + typecheck
-
 
 }
 
 
-void symbol_typecheck(astree* tree)
+void symbol_typecheck(astree* tree, FILE* outfile)
 {
+    symfile = outfile;
     symbol_stack.push_back(new symbol_table());
     traverse(tree);
     print_stack();
