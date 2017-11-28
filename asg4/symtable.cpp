@@ -30,30 +30,45 @@ int next_block = 0;
 void print_symbol (FILE* outfile, astree* node) {
     attr_bitset attributes = node->attributes;
 
-    if (node->attributes[ATTR_struct]) {
-        fprintf (outfile, "\n");
-    } else {
+    // if (node->attributes[ATTR_struct]) {
+    //     fprintf (outfile, "\n");
+    // } else {
+    //     fprintf (outfile, "    ");
+    // }
+
+    for(size_t i = 0; i < symbol_stack.size(); i++)
+    {
         fprintf (outfile, "    ");
     }
 
     if (node->attributes[ATTR_field]) {
-        fprintf (outfile, "%s (%zu.%zu.%zu) field {%s} ",
-            (node->lexinfo)->c_str(),
-            node->lloc.linenr, node->lloc.filenr, node->lloc.offset,
-            "current struct");
-    } else {
+        // fprintf (outfile, "%s (%zu.%zu.%zu) field {%s} ",
+        //     (node->lexinfo)->c_str(),
+        //     node->lloc.linenr, node->lloc.filenr, node->lloc.offset,
+        //     "current struct");
+    } else if (!(node->symbol == TOK_STRUCT)){
         fprintf (outfile, "%s (%zu.%zu.%zu) {%d} ",
             (node->lexinfo)->c_str(),
             node->lloc.linenr, node->lloc.filenr, node->lloc.offset,
             node->block_nr);
     }
 
-    if (node->attributes[ATTR_struct]) {
-        fprintf (outfile, "struct \"%s\" ",
-            (node->lexinfo)->c_str());
+    if (node->symbol == TOK_STRUCT) {
+        fprintf (outfile, "struct \"%s\" \n",
+            (node->children[0]->lexinfo)->c_str());
+        for (auto child : node->children) {
+            if(child == node->children[0])
+                continue;
+            fprintf (outfile, "   %s (%zu.%zu.%zu) field {%s} %s\n",
+                (child->children[0]->lexinfo)->c_str(),
+                child->children[0]->lloc.linenr, child->children[0]->lloc.filenr, child->children[0]->lloc.offset,
+                (node->children[0]->lexinfo)->c_str(),
+                get_attributes (child->children[0]->attributes));
+
+        }
 
     }
-
+    cout << get_attributes (attributes) << "\n";
     fprintf (outfile, "%s\n", get_attributes (attributes));
 }
 
@@ -290,17 +305,18 @@ void insert_into_struct_table (symbol_table* table, astree* node)
     for (auto child : node->children) {
         if(child == node->children[0])
             continue;
-        child->attributes.set(ATTR_field); //delete maybe. Maybe deleted.
+        cout << "FIELD: " << *child->lexinfo << "\n";
+        child->children[0]->attributes.set(ATTR_field); //delete maybe. Maybe deleted.
         symbol* child_symbol = new symbol;
-        child_symbol->attributes = child->attributes;
+        child_symbol->attributes = child->children[0]->attributes;
         child_symbol->fields = nullptr;
-        child_symbol->filenr = child->lloc.filenr;
-        child_symbol->linenr = child->lloc.linenr;
-        child_symbol->offset = child->lloc.offset; //OFFSET WOO WOO WOO WOO WOO
-        child_symbol->block_nr = child->block_nr;
+        child_symbol->filenr = child->children[0]->lloc.filenr;
+        child_symbol->linenr = child->children[0]->lloc.linenr;
+        child_symbol->offset = child->children[0]->lloc.offset; //OFFSET WOO WOO WOO WOO WOO
+        child_symbol->block_nr = child->children[0]->block_nr;
         child_symbol->parameters = nullptr;
 
-        field_table->insert (symbol_entry (child->lexinfo, child_symbol));
+        field_table->insert (symbol_entry (child->children[0]->lexinfo, child_symbol));
     }
     //create new field table
 
@@ -358,15 +374,15 @@ void set_attributes (astree* node)
         case TOK_STRUCT:
             //TODO: insert into type name table
             // insert into struct table with all other defs
-            cout << "PRINTING TO STRUCT TABLE\n";
-            node->attributes.set(ATTR_struct);
+
+            left->attributes.set(ATTR_struct);
             left->attributes.set(ATTR_typeid);
-            print_symbol(symfile, left);
+            //print_symbol(symfile, node);
             for (auto child : node->children) {
                 if(child == node->children[0])
                     continue;
                 child->attributes.set(ATTR_field);
-                //print_symbol(symfile, left->children[0]);  //TODO: this is correct but errors because traversal is wrong
+                //print_symbol(symfile, child->children[0]);  //TODO: this is correct but errors because traversal is wrong
             }
             insert_into_struct_table(struct_table, node);
             //insert_into_type_table(type_table, node->children[0]);
@@ -470,7 +486,7 @@ void set_attributes (astree* node)
 
             }
 
-            print_symbol(symfile, left->children[0]);
+            //print_symbol(symfile, left->children[0]);
 
 
             for (auto child : middle->children) {
@@ -479,7 +495,7 @@ void set_attributes (astree* node)
                 child->children[0]->attributes.set(ATTR_lval); // page 3, 2.2(d)
                 //inset into current scope
                 define_ident(child->children[0]);
-                print_symbol(symfile, child->children[0]);
+                //print_symbol(symfile, child->children[0]);
             }
 
             temp_symbol = table_find_var(symbol_stack[0], left->children[0]);
@@ -507,7 +523,7 @@ void set_attributes (astree* node)
                           left->children[0],
                           paramTree_to_symbolVec(middle));
 
-            print_symbol(symfile, node);
+
 
             //set_attributes(right); //this is the block
             // we can recurr over the switch and now handle it in
@@ -560,7 +576,7 @@ void set_attributes (astree* node)
                 left->children[0]->attributes.set(ATTR_struct);
             }
 
-            print_symbol(symfile, left->children[0]);
+            //print_symbol(symfile, left->children[0]);
 
 
             for (auto child : right->children) {
@@ -568,7 +584,7 @@ void set_attributes (astree* node)
                 child->children[0]->attributes.set(ATTR_param);
                 child->children[0]->attributes.set(ATTR_lval); // page 3, 2.2(d)
                 define_ident(child->children[0]);
-                print_symbol(symfile, child->children[0]);
+                //print_symbol(symfile, child->children[0]);
             }
 
             insert_symbol(symbol_stack[0],
@@ -597,6 +613,7 @@ void set_attributes (astree* node)
         case TOK_DECLID:
             break;
         case TOK_BLOCK:
+
             //new_block();
             // for( auto child : node->children)
             // {
@@ -627,7 +644,7 @@ void set_attributes (astree* node)
                 symbol_table* temp_table = new symbol_table();
                 temp_table->insert (symbol_entry (left->children[0]->lexinfo, temp_symbol)); //TODO: symbol_entry correct?
                 symbol_stack.push_back(temp_table);
-                print_symbol(symfile, left->children[0]);
+                //print_symbol(symfile, left->children[0]);
             }
             else if(table_find_var(symbol_stack.back(), left->children[0])) //checks table of current scope for var
             {
@@ -637,7 +654,7 @@ void set_attributes (astree* node)
             {
                 temp_symbol = create_symbol(left->children[0]);
                 (symbol_stack.back())->insert (symbol_entry (left->children[0]->lexinfo, temp_symbol));
-                print_symbol(symfile, left->children[0]);
+                //print_symbol(symfile, left->children[0]);
             }
 
             //look up in type names table
@@ -665,7 +682,6 @@ void set_attributes (astree* node)
         case TOK_RETURN:
             // I think we should check it in Qtion yyoure right.
             copy_attrs(left, node);
-            node->attributes.set(ATTR_struct); //TODO: why is this struct?????? @jose
             break;
         case TOK_RETURNVOID:
             node->attributes.set(ATTR_void);
@@ -746,6 +762,31 @@ void set_attributes (astree* node)
             break;
         case TOK_CALL:
             //TODO: all of it.
+            temp_symbol = stack_find_var(left);
+            if(!temp_symbol)
+            {
+                cerr << "no function of that name";
+                exec::exit_status = 1;
+                break;
+            }
+            if(node->children.size() - 1 != temp_symbol->parameters->size())
+            {
+                cout << "u fuck up somwhere\n";
+                cout << node->children.size() << " ";
+                cout << temp_symbol->parameters->size();
+                exec::exit_status = 1;
+                break;
+            }
+            for(size_t i = 0; i < node->children.size() - 1; i++)
+            {
+                if(!compatible_Primitives(node->children[i+1]->attributes, (temp_symbol->parameters->at(i))->attributes))
+                {
+                    cerr << "Incompatible types for function call\n";
+                    exec::exit_status = 1;
+                    break;
+                }
+            }
+
             break;
         case TOK_INDEX:
             node->attributes.set (ATTR_lval);
@@ -777,34 +818,46 @@ this is called after the parser.y returns the tree
 to main, then we call this with the tree and outfile
 */
 
+
 void traverse (astree* tree)
 {
    if (tree == nullptr)
    {
         printf("Tree is null"); //TODO: remove this when done
    }
-   if(tree->symbol == TOK_BLOCK
-         || tree->symbol == TOK_PARAMLIST
-         || tree->symbol == TOK_FUNCTION
-         || tree->symbol == TOK_PROTOTYPE)
+   if(      tree->symbol == TOK_BLOCK)
    {
        cout << "new block: number is " << next_block << "\n";
        new_block();
        tree->block_nr = next_block;
-
+       set_attributes(tree);
        for (size_t child = 0; child < tree->children.size(); child++) {
           traverse(tree->children.at(child));
+          print_symbol(symfile, tree->children.at(child));
        }
-       set_attributes(tree);
        exit_block();
    }
    else
    {
+       if(      tree->symbol == TOK_FUNCTION
+             || tree->symbol == TOK_PROTOTYPE
+             || tree->symbol == TOK_PARAMLIST)
+       {
+           new_block();
+       }
        for (size_t child = 0; child < tree->children.size(); child++) {
           traverse(tree->children.at(child));
+          print_symbol(symfile, tree->children.at(child));
        }
        set_attributes(tree);
        printf("\n%d\n", tree->symbol);
+       if(      tree->symbol == TOK_FUNCTION
+             || tree->symbol == TOK_PROTOTYPE
+             || tree->symbol == TOK_PARAMLIST)
+       {
+
+           exit_block();
+       }
    }
 
 }

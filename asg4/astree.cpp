@@ -32,7 +32,7 @@ astree::~astree() {
    }
 }
 
-const char* get_attributes (attr_bitset attributes) {
+char* get_attributes (attr_bitset attributes) {
     string str = "";
 
     if (attributes.test (ATTR_void))        str += "void ";
@@ -50,7 +50,7 @@ const char* get_attributes (attr_bitset attributes) {
     if (attributes.test (ATTR_vreg))        str += "vreg ";
     if (attributes.test (ATTR_vaddr))       str += "vaddr ";
 
-    return str.c_str();
+    return strdup(str.c_str());
 }
 
 astree* astree::adopt (astree* child1, astree* child2) {

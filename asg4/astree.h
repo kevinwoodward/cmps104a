@@ -65,4 +65,6 @@ void destroy (astree* tree1,
 
 void errllocprintf (const location&, const char* format, const char*);
 
+char* get_attributes (attr_bitset attributes);
+
 #endif
