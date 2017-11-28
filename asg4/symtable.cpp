@@ -487,7 +487,7 @@ void set_attributes (astree* node)
 
                 cerr << "undeclared identifier: "
                      << *node->lexinfo << "\n";
-                 print_stack();
+
                 exec::exit_status = 1;
             }
             break;
@@ -511,9 +511,18 @@ void set_attributes (astree* node)
             {
                 if(temp_symbol->attributes[ATTR_struct])
                 {
-                    field_symbol = table_find_var(temp_symbol->fields,
-                                                  right);
-                    node->attributes = field_symbol->attributes;
+
+
+                    field_symbol = table_find_var(temp_symbol->fields,right);
+
+                    if(field_symbol)
+                    {
+                        node->attributes = field_symbol->attributes;
+                    }
+                    else
+                    {
+                        cerr << "Field does not exist\n";
+                    }
 
                     node->attributes.set (ATTR_vaddr);
                     node->attributes.set (ATTR_lval);
@@ -594,7 +603,7 @@ void set_attributes (astree* node)
                                          temp_ast_node);
 
 
-            if(temp_symbol){
+            if(temp_symbol && temp_symbol->parameters){
                 //TODO: dont use compatible_Attribs here, check w/for()
 
                 if(!compatible_Attribs(temp_symbol->attributes,
@@ -614,9 +623,10 @@ void set_attributes (astree* node)
 
             }
 
-            //insert_symbol(symbol_stack[0],
-            //              temp_ast_node,
-            //              paramTree_to_symbolVec(middle)); //TODO delete or uncomment
+
+            insert_symbol(symbol_stack[0],
+                          temp_ast_node,
+                          paramTree_to_symbolVec(middle)); //TODO delete or uncomment
 
 
 
@@ -656,6 +666,7 @@ void set_attributes (astree* node)
                 define_ident(child->children[0]);
                 //print_symbol(symfile, child->children[0]);
             }
+
 
             insert_symbol(symbol_stack[0],
                           temp_ast_node,
@@ -912,10 +923,17 @@ void set_attributes (astree* node)
                 exec::exit_status = 1;
                 break;
             }
-            if(node->children.size()-1
+            
+            //TODO: actually handle this, not do null bypass
+            if(temp_symbol->parameters == nullptr)
+            {
+                //this makes recursion work
+                break;
+            }
+            else if(node->children.size()-1
                != temp_symbol->parameters->size())
             {
-                cerr << "u fuck up somwhere\n";
+                cerr << "Number of args does not match function\n";
                 cerr << node->children.size() << " ";
                 cerr << temp_symbol->parameters->size();
                 exec::exit_status = 1;
@@ -1068,8 +1086,9 @@ void traverse (astree* tree)
            if(returnNode->symbol == TOK_TYPEID)
                funcNode->attributes.set(ATTR_struct);
 
-
-
+           //for recursion
+           insert_symbol(symbol_stack[0],
+                         funcNode);
            print_symbol(symfile, funcNode);
        }
        postorder(tree);
