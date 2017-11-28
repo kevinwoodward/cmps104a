@@ -25,28 +25,28 @@ FILE* symfile;
 symbol_table* struct_table = new symbol_table();
 symbol_table* type_table = new symbol_table();
 vector<symbol_table*> symbol_stack;
-int next_block = 0;
+int next_block = 1;
 
 void print_symbol (FILE* outfile, astree* node) {
-    attr_bitset attributes = node->attributes;
 
-    // if (node->attributes[ATTR_struct]) {
-    //     fprintf (outfile, "\n");
-    // } else {
-    //     fprintf (outfile, "    ");
-    // }
+    cout << "Printing: " << *node->lexinfo << "\n";
+
+    // should be used to print:
+    // functions, prototypes, vardecls, structs, and fields of structs
+
+    attr_bitset attributes = node->attributes;
 
     for(size_t i = 0; i < symbol_stack.size(); i++)
     {
-        fprintf (outfile, "    ");
+        fprintf (outfile, "   ");
     }
 
     if (node->attributes[ATTR_field]) {
-        // fprintf (outfile, "%s (%zu.%zu.%zu) field {%s} ",
-        //     (node->lexinfo)->c_str(),
-        //     node->lloc.linenr, node->lloc.filenr, node->lloc.offset,
-        //     "current struct");
-    } else if (!(node->symbol == TOK_STRUCT)){
+         fprintf (outfile, "%s (%zu.%zu.%zu) field {%s} ",
+             (node->lexinfo)->c_str(),
+             node->lloc.linenr, node->lloc.filenr, node->lloc.offset,
+             "current struct");
+    } else {
         fprintf (outfile, "%s (%zu.%zu.%zu) {%d} ",
             (node->lexinfo)->c_str(),
             node->lloc.linenr, node->lloc.filenr, node->lloc.offset,
@@ -68,7 +68,6 @@ void print_symbol (FILE* outfile, astree* node) {
         }
 
     }
-    cout << get_attributes (attributes) << "\n";
     fprintf (outfile, "%s\n", get_attributes (attributes));
 }
 
@@ -99,19 +98,13 @@ void print_stack()
 
 void new_block()
 {
-
     next_block++;
     symbol_stack.push_back(nullptr);
 }
 
 void exit_block()
 {
-    //cout << "before exit:\n";
-    //print_stack();
-
     symbol_stack.pop_back();
-    //cout << "after exit:\n";
-    //print_stack();
 }
 
 symbol* table_find_var(symbol_table* table, astree* node)
@@ -124,20 +117,34 @@ symbol* table_find_var(symbol_table* table, astree* node)
     return (table->find (node->lexinfo))->second;
 }
 
+symbol* table_find_var(symbol_table* table, const string* lex)
+{
+    auto symbol_iter = (table->find(lex));
+    if (symbol_iter == table->end())  //TODO: is the table-> empty case really needed?
+    {
+        return nullptr;
+    }
+    return (table->find (lex))->second;
+}
+
 
 
 symbol* stack_find_var(astree* node)
 {
+
     symbol_table* current_table = nullptr;
-    for(int i = symbol_stack.size() - 1; i >= 0; i--)
+    for(int i = symbol_stack.size(); i > 0; i--)
     {
-        current_table = symbol_stack[i];
+        current_table = symbol_stack[i-1];
         if(current_table != nullptr)
         {
             if(!(current_table->empty()))
             {
-
-                return table_find_var(current_table, node);
+                symbol* result = table_find_var(current_table, node);
+                if(result != nullptr)
+                {
+                    return result;
+                }
             }
         }
     }
@@ -182,7 +189,18 @@ symbol* create_symbol (astree* node, vector<symbol*>* parameters = nullptr)
 void insert_symbol (symbol_table* table,
                     astree* node,
                     vector<symbol*>* paramVec = nullptr) {
+    node->block_nr = next_block - 1;
     symbol* symbol = create_symbol (node, paramVec);
+    if ((table != nullptr) && (node != nullptr)) {
+        table->insert (symbol_entry (node->lexinfo, symbol));
+    }
+}
+void insert_struct (symbol_table* table,
+                    astree* node,
+                    symbol_table* field_table) {
+    node->block_nr = next_block - 1;
+    symbol* symbol = create_symbol (node);
+    symbol->fields = field_table;
 
     if ((table != nullptr) && (node != nullptr)) {
         table->insert (symbol_entry (node->lexinfo, symbol));
@@ -235,6 +253,32 @@ void define_ident (astree* node) {
     insert_symbol (table, node);
 }
 
+void define_struct (astree* node) {
+    if (symbol_stack.back() == nullptr) {
+        symbol_stack.pop_back();
+        symbol_stack.push_back( new symbol_table ());
+    }
+    symbol* struct_symbol = nullptr;
+    symbol_table* table = symbol_stack.back();
+    //look up field table in struct_table with node->lexinfo
+    symbol_table* field_table = nullptr;
+    struct_symbol = table_find_var(struct_table, node);
+    if(struct_symbol)
+    {
+        field_table = struct_symbol->fields;
+        node->children[0]->attributes.reset(ATTR_typeid);
+        node->children[0]->attributes.set(ATTR_struct);
+        insert_struct (table, node->children[0], field_table);
+    }
+    else {
+       cerr << "No definition for: " << *node->lexinfo << "\n";
+       exec::exit_status = 1;
+       return;
+    }
+
+
+}
+
 void copy_attrs (astree* src, astree* dest)
 {
     for (int i = 0; i < ATTR_bitset_size; i++) {
@@ -277,9 +321,29 @@ bool compatible_Attribs(attr_bitset first, attr_bitset second)
     {
         return true;
     }
+    if(first[ATTR_typeid] && second[ATTR_typeid])
+    {
+        return true;
+    }
     return false;
 
 
+}
+
+bool compatible_structs(const string* first, const string* second)
+{
+
+    if(*first == *second)
+    {
+        symbol* struct_symbol = nullptr;
+        //look up field table in struct_table with node->lexinfo
+        struct_symbol = table_find_var(struct_table, first);
+        if(struct_symbol)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool compatible_Nodes(astree* first, astree* second)
@@ -305,7 +369,6 @@ void insert_into_struct_table (symbol_table* table, astree* node)
     for (auto child : node->children) {
         if(child == node->children[0])
             continue;
-        cout << "FIELD: " << *child->lexinfo << "\n";
         child->children[0]->attributes.set(ATTR_field); //delete maybe. Maybe deleted.
         symbol* child_symbol = new symbol;
         child_symbol->attributes = child->children[0]->attributes;
@@ -377,7 +440,7 @@ void set_attributes (astree* node)
 
             left->attributes.set(ATTR_struct);
             left->attributes.set(ATTR_typeid);
-            //print_symbol(symfile, node);
+            print_symbol(symfile, node);
             for (auto child : node->children) {
                 if(child == node->children[0])
                     continue;
@@ -394,13 +457,16 @@ void set_attributes (astree* node)
                 //if null after that, throw error: "not found"
 
             temp_symbol = stack_find_var(node);
+
             if(temp_symbol != nullptr)
             {
+
                 node->attributes = temp_symbol->attributes;
 
             }
             else
             {
+
                 cerr << "undeclared identifier: " << *node->lexinfo << "\n";
                 exec::exit_status = 1;
             }
@@ -426,12 +492,12 @@ void set_attributes (astree* node)
                 }
                 else
                 {
-                    fprintf(stderr, "Sorry it's not a struct\n");
+                    fprintf(stderr, "Is not a struct\n");
                 }
             }
             else
             {
-                fprintf(stderr, "Sorry doesn't exist, line:5:3\n");
+                fprintf(stderr, "Field doesn't exist\n");
             }
             break;
         case TOK_ARRAY:
@@ -460,7 +526,6 @@ void set_attributes (astree* node)
             break;
 
         case TOK_FUNCTION:
-            cout << "entering tok_func\n";
 
             // func
             //      name = left
@@ -498,11 +563,13 @@ void set_attributes (astree* node)
                 //print_symbol(symfile, child->children[0]);
             }
 
+
             temp_symbol = table_find_var(symbol_stack[0], left->children[0]);
+
+
             if(temp_symbol){
                 //TODO: dont use compatible_Attribs here, check w/for()
-                cout << "temp symbol attrs: " << temp_symbol->attributes;
-                cout << "left attrs: " << left->attributes;
+
                 if(!compatible_Attribs(temp_symbol->attributes,
                                         left->attributes))
                     {
@@ -542,22 +609,6 @@ void set_attributes (astree* node)
                     cerr << "\n" << left->children[0]->attributes<< "\n";
                     exec::exit_status = 1;
                 }
-                /*
-                    enum { ATTR_void, ATTR_int, ATTR_null, ATTR_string, ATTR_struct,
-                    ATTR_array, ATTR_function, ATTR_variable, ATTR_field, ATTR_typeid,
-                    ATTR_param, ATTR_lval, ATTR_const, ATTR_vreg, ATTR_vaddr, ATTR_bitset_size };
-                */
-                //do a for loop for the first 6 elements of the enum. if any dont match throw error
-                //with the exception of reference type and null
-
-                //check return_Node->attribs against left->children[0]->attributes
-
-                /*
-                    Two types are compatible if they are exactly the same type ; or if one type is
-                    any reference type and the other is null. In the type checking grammar, in each
-                    rule, types in italics must be substituted consistently by compatible types.
-                    Types are compatible only if the array attribute is on for both or off for both.
-                */
 
             }
             break;
@@ -607,7 +658,9 @@ void set_attributes (astree* node)
                 child->children[0]->attributes.set(ATTR_param);
                 child->children[0]->attributes.set(ATTR_lval); // page 3, 2.2(d)
                 //inset into current scope
+
                 define_ident(child->children[0]);
+                print_symbol(symfile, child->children[0]);
             }
             break;
         case TOK_DECLID:
@@ -630,35 +683,73 @@ void set_attributes (astree* node)
             copy_attrs(left, node); //Why is this needed?
             if(!compatible_Nodes(left,
                                  right))
-                {
-                    cerr << "error, incompatible types in assignment\n";
-                    cerr << *left->lexinfo << " : " << *right->lexinfo;
-                    cerr << " " << left->attributes << " : " << right->attributes;
-                    exec::exit_status = 1;
-                }
-            if(symbol_stack.size() == 0 || symbol_stack.back() == nullptr)
             {
-                //create new symbol table and push onto stack
-                //push symbol on newly created symbol table
-                temp_symbol = create_symbol(left->children[0]);
-                symbol_table* temp_table = new symbol_table();
-                temp_table->insert (symbol_entry (left->children[0]->lexinfo, temp_symbol)); //TODO: symbol_entry correct?
-                symbol_stack.push_back(temp_table);
-                //print_symbol(symfile, left->children[0]);
+                cerr << "error, incompatible types in assignment\n";
+                cerr << *left->lexinfo << " : " << *right->lexinfo;
+                cerr << " " << get_attributes(left->attributes) << " : " << get_attributes(right->attributes) << "\n";
+                exec::exit_status = 1;
             }
-            else if(table_find_var(symbol_stack.back(), left->children[0])) //checks table of current scope for var
+
+            if(left->symbol == TOK_TYPEID)
             {
-                fprintf(stderr, "Error: Variable <variable> already declared in scope\n" );
+                //check to see if foo = foo() in foo f = new foo();
+                if(*(left->lexinfo) != *(right->children[0]->lexinfo))
+                {
+                    cerr << "Incompatible struct declaration: "
+                        << *(left->lexinfo) << " and "
+                        << *(right->children[0]->lexinfo) << "\n";
+                        break;
+                }
+                //look up in struct table
+                if(symbol_stack.back() == nullptr)
+                {
+                    //then new scope
+                    define_struct(left);
+                    print_symbol(symfile, left->children[0]);
+                }
+                else
+                {
+                    //then there exists a curr scope, check that one
+                    if(table_find_var(symbol_stack.back(), left->children[0]))
+                    {
+                        cerr << "Duplicate declaraction on variable: " <<
+                            *(left->children[0])->lexinfo << "\n";
+                            break;
+                    }
+                    else
+                    {
+                        define_struct(left);
+                        print_symbol(symfile, left->children[0]);
+                    }
+
+                }
+                break;
+            }
+            //TODO: simplify logic
+            if(symbol_stack.back() == nullptr)
+            {
+                //then new scope
+                define_ident(left->children[0]);
+                print_symbol(symfile, left->children[0]);
             }
             else
             {
-                temp_symbol = create_symbol(left->children[0]);
-                (symbol_stack.back())->insert (symbol_entry (left->children[0]->lexinfo, temp_symbol));
-                //print_symbol(symfile, left->children[0]);
+                //then there exists a curr scope, check that one
+                if(table_find_var(symbol_stack.back(), left->children[0]))
+                {
+                    cerr << "Duplicate declaraction on variable: " <<
+                        *(left->children[0])->lexinfo << "\n";
+                        break;
+                }
+                else
+                {
+                    define_ident(left->children[0]);
+                    print_symbol(symfile, left->children[0]);
+                }
+
             }
 
-            //look up in type names table
-            //if struct do for loop
+
             break;
         case TOK_WHILE:
             if(left->attributes[ATTR_void]){
@@ -765,15 +856,15 @@ void set_attributes (astree* node)
             temp_symbol = stack_find_var(left);
             if(!temp_symbol)
             {
-                cerr << "no function of that name";
+                cerr << "no function of that name\n";
                 exec::exit_status = 1;
                 break;
             }
             if(node->children.size() - 1 != temp_symbol->parameters->size())
             {
-                cout << "u fuck up somwhere\n";
-                cout << node->children.size() << " ";
-                cout << temp_symbol->parameters->size();
+                cerr << "u fuck up somwhere\n";
+                cerr << node->children.size() << " ";
+                cerr << temp_symbol->parameters->size();
                 exec::exit_status = 1;
                 break;
             }
@@ -818,6 +909,43 @@ this is called after the parser.y returns the tree
 to main, then we call this with the tree and outfile
 */
 
+void postorder (astree* tree)
+{
+    if(      tree->symbol == TOK_BLOCK
+             || tree->symbol == TOK_PARAMLIST)
+    {
+        new_block();
+    }
+        //tree->block_nr = next_block;
+
+        for (size_t child = 0; child < tree->children.size(); child++) {
+           postorder(tree->children.at(child));
+        }
+        set_attributes(tree);
+
+    if(tree->symbol == TOK_BLOCK)
+    {
+        exit_block();
+    }
+}
+
+void preorder (astree* tree)
+{
+    if(      tree->symbol == TOK_BLOCK)
+    {
+        new_block();
+    }
+        //tree->block_nr = next_block;
+        set_attributes(tree);
+        for (size_t child = 0; child < tree->children.size(); child++) {
+           preorder(tree->children.at(child));
+        }
+
+    if(      tree->symbol == TOK_BLOCK)
+    {
+        exit_block();
+    }
+}
 
 void traverse (astree* tree)
 {
@@ -827,34 +955,38 @@ void traverse (astree* tree)
    }
    if(      tree->symbol == TOK_BLOCK)
    {
-       cout << "new block: number is " << next_block << "\n";
        new_block();
-       tree->block_nr = next_block;
-       set_attributes(tree);
-       for (size_t child = 0; child < tree->children.size(); child++) {
-          traverse(tree->children.at(child));
-          print_symbol(symfile, tree->children.at(child));
-       }
+       //tree->block_nr = next_block;
+       preorder(tree);
        exit_block();
    }
    else
    {
+       cout << "GET HERE\n";
        if(      tree->symbol == TOK_FUNCTION
-             || tree->symbol == TOK_PROTOTYPE
-             || tree->symbol == TOK_PARAMLIST)
+             || tree->symbol == TOK_PROTOTYPE)
        {
-           new_block();
+
+           tree->children[0]->children[0]->attributes.set(ATTR_function);
+
+           if(tree->children[0]->symbol == TOK_VOID)
+               tree->children[0]->children[0]->attributes.set(ATTR_void);
+           if(tree->children[0]->symbol == TOK_INT)
+               tree->children[0]->children[0]->attributes.set(ATTR_int);
+           if(tree->children[0]->symbol == TOK_STRING)
+               tree->children[0]->children[0]->attributes.set(ATTR_string);
+           if(tree->children[0]->symbol == TOK_TYPEID)
+               tree->children[0]->children[0]->attributes.set(ATTR_struct);
+
+
+
+           print_symbol(symfile, tree->children[0]->children[0]);
        }
-       for (size_t child = 0; child < tree->children.size(); child++) {
-          traverse(tree->children.at(child));
-          print_symbol(symfile, tree->children.at(child));
-       }
-       set_attributes(tree);
-       printf("\n%d\n", tree->symbol);
+       postorder(tree);
        if(      tree->symbol == TOK_FUNCTION
-             || tree->symbol == TOK_PROTOTYPE
-             || tree->symbol == TOK_PARAMLIST)
+             || tree->symbol == TOK_PROTOTYPE)
        {
+
 
            exit_block();
        }
@@ -866,7 +998,10 @@ void traverse (astree* tree)
 void symbol_typecheck(astree* tree, FILE* outfile)
 {
     symfile = outfile;
-    symbol_stack.push_back(new symbol_table());
-    traverse(tree);
+    symbol_stack.push_back(new symbol_table()); //TODO: maybe change
+    for (auto child : tree->children)
+    {
+        traverse(child);
+    }
     print_stack();
 }
