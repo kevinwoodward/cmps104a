@@ -23,18 +23,13 @@ using namespace std;
 FILE* symfile;
 
 symbol_table* struct_table = new symbol_table();
-symbol_table* type_table = new symbol_table();
 vector<symbol_table*> symbol_stack;
 int next_block = 1;
+bool last_printed_nl = false;
 
 void print_symbol (FILE* outfile, astree* node) {
-
-    cout << "Printing: " << *node->lexinfo << "\n";
-
-    // should be used to print:
-    // functions, prototypes, vardecls, structs, and fields of structs
-
     attr_bitset attributes = node->attributes;
+    last_printed_nl = false;
 
     for(size_t i = 0; i < symbol_stack.size(); i++)
     {
@@ -59,9 +54,11 @@ void print_symbol (FILE* outfile, astree* node) {
         for (auto child : node->children) {
             if(child == node->children[0])
                 continue;
-            fprintf (outfile, "   %s (%zu.%zu.%zu) field {%s} %s\n",
+            fprintf (outfile, "   %s (%zu.%zu.%zu) field {%s} %s\n\n",
                 (child->children[0]->lexinfo)->c_str(),
-                child->children[0]->lloc.linenr, child->children[0]->lloc.filenr, child->children[0]->lloc.offset,
+                child->children[0]->lloc.linenr,
+                child->children[0]->lloc.filenr,
+                child->children[0]->lloc.offset,
                 (node->children[0]->lexinfo)->c_str(),
                 get_attributes (child->children[0]->attributes));
 
@@ -83,7 +80,8 @@ void print_stack()
             cout << "stack: " << i << ": \n";
             for (auto elem : *symtab)
             {
-                cout << *elem.first << " : " << elem.second->attributes << "\n";
+                cout << *elem.first <<
+                " : " << elem.second->attributes << "\n";
             }
             i = i + 1;
         }
@@ -105,12 +103,19 @@ void new_block()
 void exit_block()
 {
     symbol_stack.pop_back();
+    if(!last_printed_nl)
+    {
+        fprintf(symfile, "\n");
+        last_printed_nl = true;
+    }
+    last_printed_nl = true;
 }
 
 symbol* table_find_var(symbol_table* table, astree* node)
 {
     auto symbol_iter = (table->find(node->lexinfo));
-    if (symbol_iter == table->end())  //TODO: is the table-> empty case really needed?
+    //TODO: is the table-> empty case really needed?
+    if (symbol_iter == table->end())
     {
         return nullptr;
     }
@@ -120,7 +125,8 @@ symbol* table_find_var(symbol_table* table, astree* node)
 symbol* table_find_var(symbol_table* table, const string* lex)
 {
     auto symbol_iter = (table->find(lex));
-    if (symbol_iter == table->end())  //TODO: is the table-> empty case really needed?
+    //TODO: is the table-> empty case really needed?
+    if (symbol_iter == table->end())
     {
         return nullptr;
     }
@@ -151,7 +157,7 @@ symbol* stack_find_var(astree* node)
     return nullptr;
 }
 
-void blockTree_to_returnVec (astree* tree, vector<astree*>* &returnVec)
+void blockTree_to_returnVec(astree* tree, vector<astree*>* &returnVec)
 {
    if (tree == nullptr)
    {
@@ -162,7 +168,8 @@ void blockTree_to_returnVec (astree* tree, vector<astree*>* &returnVec)
    {
       blockTree_to_returnVec(tree->children.at(child), returnVec);
    }
-   //also chekc if return or returnvoid. but they wont have attributes yet
+   //also chekc if return or returnvoid.
+   //but they wont have attributes yet
 
    //this works
    if(tree->symbol == TOK_RETURN || tree->symbol == TOK_RETURNVOID)
@@ -173,7 +180,8 @@ void blockTree_to_returnVec (astree* tree, vector<astree*>* &returnVec)
 
 }
 
-symbol* create_symbol (astree* node, vector<symbol*>* parameters = nullptr)
+symbol* create_symbol (astree* node,
+                       vector<symbol*>* parameters = nullptr)
 {
     symbol* sym = new symbol;
     sym->attributes = node->attributes;
@@ -235,7 +243,8 @@ bool compare_params(vector<symbol*>* first, vector<symbol*>* second)
         currentSecondParam = second->at(i);
         for(size_t j = 0; j < 7; j++)
         {
-            if(currentFirstParam->attributes[j] != currentSecondParam->attributes[j])
+            if(currentFirstParam->attributes[j]
+                != currentSecondParam->attributes[j])
             {
                 return false;
             }
@@ -290,12 +299,13 @@ void copy_attrs (astree* src, astree* dest)
 /*
     enum { ATTR_void, ATTR_int, ATTR_null, ATTR_string, ATTR_struct,
     ATTR_array, ATTR_function, ATTR_variable, ATTR_field, ATTR_typeid,
-    ATTR_param, ATTR_lval, ATTR_const, ATTR_vreg, ATTR_vaddr, ATTR_bitset_size };
+    ATTR_param, ATTR_lval, ATTR_const, ATTR_vreg, ATTR_vaddr,
+    ATTR_bitset_size };
 */
 
 bool compatible_Primitives(attr_bitset first, attr_bitset second)
 {
-    for(int i = 0; i < 6; i++)
+    for(int i = 0; i < 5; i++)
     {
         if(first[i] && second[i]){
             return true;
@@ -307,7 +317,7 @@ bool compatible_Primitives(attr_bitset first, attr_bitset second)
 
 bool compatible_Attribs(attr_bitset first, attr_bitset second)
 {
-    for(int i = 0; i < 6; i++)
+    for(int i = 0; i < 5; i++)
     {
         if(first[i] && second[i]){
             return true;
@@ -321,6 +331,14 @@ bool compatible_Attribs(attr_bitset first, attr_bitset second)
     {
         return true;
     }
+    reference = first[ATTR_string]
+                     || first[ATTR_array]
+                     || first[ATTR_struct];
+    if(second[ATTR_null] && reference)
+    {
+        return true;
+    }
+
     if(first[ATTR_typeid] && second[ATTR_typeid])
     {
         return true;
@@ -357,7 +375,8 @@ bool compatible_Symbols(symbol* first, symbol* second)
 
     if(first != nullptr && second != nullptr)
     {
-        return compatible_Attribs(first->attributes, second->attributes);
+        return compatible_Attribs(first->attributes,
+                                  second->attributes);
     }
     return false;
 
@@ -369,21 +388,19 @@ void insert_into_struct_table (symbol_table* table, astree* node)
     for (auto child : node->children) {
         if(child == node->children[0])
             continue;
-        child->children[0]->attributes.set(ATTR_field); //delete maybe. Maybe deleted.
+        child->children[0]->attributes.set(ATTR_field);
         symbol* child_symbol = new symbol;
         child_symbol->attributes = child->children[0]->attributes;
         child_symbol->fields = nullptr;
         child_symbol->filenr = child->children[0]->lloc.filenr;
         child_symbol->linenr = child->children[0]->lloc.linenr;
-        child_symbol->offset = child->children[0]->lloc.offset; //OFFSET WOO WOO WOO WOO WOO
+        child_symbol->offset = child->children[0]->lloc.offset;
         child_symbol->block_nr = child->children[0]->block_nr;
         child_symbol->parameters = nullptr;
 
-        field_table->insert (symbol_entry (child->children[0]->lexinfo, child_symbol));
+        field_table->insert (symbol_entry (child->children[0]->lexinfo,
+                                           child_symbol));
     }
-    //create new field table
-
-
     symbol* node_symbol = new symbol;
     node_symbol->attributes = node->attributes;
     node_symbol->fields = field_table;
@@ -393,7 +410,8 @@ void insert_into_struct_table (symbol_table* table, astree* node)
     node_symbol->block_nr = node->block_nr;
     node_symbol->parameters = nullptr;
 
-    table->insert (symbol_entry (node->children[0]->lexinfo, node_symbol));
+    table->insert (symbol_entry (node->children[0]->lexinfo,
+                                 node_symbol));
 }
 
 
@@ -413,6 +431,7 @@ void set_attributes (astree* node)
     astree* left = nullptr;
     astree* middle = nullptr;
     astree* right = nullptr;
+    astree* temp_ast_node = nullptr;
     //symbol* symbol;
 
     if (node->children.size() > 0) {
@@ -427,7 +446,7 @@ void set_attributes (astree* node)
     }
 
     symbol* temp_symbol = nullptr;
-    symbol* temp_symbol2 = nullptr;
+    //symbol* temp_symbol2 = nullptr;
     symbol* field_symbol = nullptr;
     vector<astree*>* return_Vec = nullptr;
 
@@ -445,10 +464,9 @@ void set_attributes (astree* node)
                 if(child == node->children[0])
                     continue;
                 child->attributes.set(ATTR_field);
-                //print_symbol(symfile, child->children[0]);  //TODO: this is correct but errors because traversal is wrong
+
             }
             insert_into_struct_table(struct_table, node);
-            //insert_into_type_table(type_table, node->children[0]);
 
             break;
         case TOK_IDENT:
@@ -467,7 +485,9 @@ void set_attributes (astree* node)
             else
             {
 
-                cerr << "undeclared identifier: " << *node->lexinfo << "\n";
+                cerr << "undeclared identifier: "
+                     << *node->lexinfo << "\n";
+                 print_stack();
                 exec::exit_status = 1;
             }
             break;
@@ -475,12 +495,17 @@ void set_attributes (astree* node)
             node->attributes.set(ATTR_typeid);
             break;
         case TOK_FIELD:
+            node->attributes.set(ATTR_field);
+            break;
+        case '.':
             node->attributes.set (ATTR_field);
             //TODO: idk lol see the pdf table fig1
-            if(node->children.size() == 0)
-            {
-                break;
-            }
+
+            // if(node->children.size() == 0)
+            // {
+            //     break;
+            // }
+
             temp_symbol = stack_find_var(left);
             if(temp_symbol)
             {
@@ -489,6 +514,10 @@ void set_attributes (astree* node)
                     field_symbol = table_find_var(temp_symbol->fields,
                                                   right);
                     node->attributes = field_symbol->attributes;
+
+                    node->attributes.set (ATTR_vaddr);
+                    node->attributes.set (ATTR_lval);
+
                 }
                 else
                 {
@@ -501,7 +530,12 @@ void set_attributes (astree* node)
             }
             break;
         case TOK_ARRAY:
-            copy_attrs(left, node);
+            if(left->symbol == TOK_INT)
+                node->attributes.set(ATTR_int);
+            if(left->symbol == TOK_STRING)
+                node->attributes.set(ATTR_string);
+            if(left->symbol == TOK_TYPEID)
+                node->attributes.set(ATTR_struct);
             node->attributes.set(ATTR_array);
             break;
         case TOK_VOID:
@@ -522,6 +556,7 @@ void set_attributes (astree* node)
                 break;
             }
             left->attributes.set(ATTR_string);
+            node->attributes.set(ATTR_string);
             //TODO: inherit type
             break;
 
@@ -535,36 +570,28 @@ void set_attributes (astree* node)
             // paramlist to ATTR_param
             // and ATTR_lval
 
-            left->children[0]->attributes.set(ATTR_function);
-            //set return type attrib. Wont this be handled already because postorder?
-            //no because this is when TOK_FUNC is encountered, so we have to set the attrib here
-            if(left->symbol == TOK_VOID)
-                left->children[0]->attributes.set(ATTR_void);
-            if(left->symbol == TOK_INT)
-                left->children[0]->attributes.set(ATTR_int);
-            if(left->symbol == TOK_STRING)
-                left->children[0]->attributes.set(ATTR_string);
-            if(left->symbol == TOK_TYPEID) {
-                left->children[0]->attributes.set(ATTR_struct);
-                //TODO we actually have to look up the struct in the table here
-                //this is a type
-
+            if(left->symbol == TOK_ARRAY)
+            {
+                temp_ast_node = left->children[1];
+                temp_ast_node->attributes.set(ATTR_array);
             }
-
-            //print_symbol(symfile, left->children[0]);
-
+            else
+            {
+                temp_ast_node = left->children[0];
+            }
 
             for (auto child : middle->children) {
                 child->children[0]->attributes.set(ATTR_variable);
                 child->children[0]->attributes.set(ATTR_param);
-                child->children[0]->attributes.set(ATTR_lval); // page 3, 2.2(d)
+                child->children[0]->attributes.set(ATTR_lval);
                 //inset into current scope
                 define_ident(child->children[0]);
                 //print_symbol(symfile, child->children[0]);
             }
 
 
-            temp_symbol = table_find_var(symbol_stack[0], left->children[0]);
+            temp_symbol = table_find_var(symbol_stack[0],
+                                         temp_ast_node);
 
 
             if(temp_symbol){
@@ -573,7 +600,8 @@ void set_attributes (astree* node)
                 if(!compatible_Attribs(temp_symbol->attributes,
                                         left->attributes))
                     {
-                        cerr << "incompatible prototype due to ret type";
+                        cerr << "incompatible prototype "
+                                "due to ret type";
                         exec::exit_status = 1;
                     }
                 if(!compare_params(temp_symbol->parameters,
@@ -586,9 +614,9 @@ void set_attributes (astree* node)
 
             }
 
-            insert_symbol(symbol_stack[0],
-                          left->children[0],
-                          paramTree_to_symbolVec(middle));
+            //insert_symbol(symbol_stack[0],
+            //              temp_ast_node,
+            //              paramTree_to_symbolVec(middle)); //TODO delete or uncomment
 
 
 
@@ -596,50 +624,41 @@ void set_attributes (astree* node)
             // we can recurr over the switch and now handle it in
             // TOK_BLOCK
             return_Vec = new vector<astree*>();
-            //not declared in this scope can u copy blockTree_to_returnVec up? yes
             blockTree_to_returnVec (right, return_Vec);
             for(auto return_Node : *return_Vec) //this should work
             {
 
                 if(!compatible_Attribs(return_Node->attributes,
-                                        left->children[0]->attributes))
+                                        temp_ast_node->attributes))
                 {
                     cerr << "incompatible return type";
-                    cerr << "\n" << return_Node->attributes<< "\n";
-                    cerr << "\n" << left->children[0]->attributes<< "\n";
                     exec::exit_status = 1;
                 }
 
             }
             break;
         case TOK_PROTOTYPE:
-            left->children[0]->attributes.set(ATTR_function);
 
-            if(left->symbol == TOK_VOID)
-                left->children[0]->attributes.set(ATTR_void);
-            if(left->symbol == TOK_INT)
-                left->children[0]->attributes.set(ATTR_int);
-            if(left->symbol == TOK_STRING)
-                left->children[0]->attributes.set(ATTR_string);
-            if(left->symbol == TOK_TYPEID)
+            if(left->symbol == TOK_ARRAY)
             {
-                //lookup in struct table
-                left->children[0]->attributes.set(ATTR_struct);
+                temp_ast_node = left->children[1];
+                temp_ast_node->attributes.set(ATTR_array);
             }
-
-            //print_symbol(symfile, left->children[0]);
-
+            else
+            {
+                temp_ast_node = left->children[0];
+            }
 
             for (auto child : right->children) {
                 child->children[0]->attributes.set(ATTR_variable);
                 child->children[0]->attributes.set(ATTR_param);
-                child->children[0]->attributes.set(ATTR_lval); // page 3, 2.2(d)
+                child->children[0]->attributes.set(ATTR_lval);
                 define_ident(child->children[0]);
                 //print_symbol(symfile, child->children[0]);
             }
 
             insert_symbol(symbol_stack[0],
-                          left->children[0],
+                          temp_ast_node,
                           paramTree_to_symbolVec(right));
 
             break;
@@ -656,7 +675,7 @@ void set_attributes (astree* node)
 
                 child->children[0]->attributes.set(ATTR_variable);
                 child->children[0]->attributes.set(ATTR_param);
-                child->children[0]->attributes.set(ATTR_lval); // page 3, 2.2(d)
+                child->children[0]->attributes.set(ATTR_lval);
                 //inset into current scope
 
                 define_ident(child->children[0]);
@@ -667,26 +686,31 @@ void set_attributes (astree* node)
             break;
         case TOK_BLOCK:
 
-            //new_block();
-            // for( auto child : node->children)
-            // {
-            //     //idk, im reading 3.2 right now which deals with this
-            //     set_attributes(child);
-            // }
-            //exit_block();
-            break; // back
+
+            break;
         case TOK_VARDECL:
-            // enter into identifier symbol table1
-            left->children[0]->attributes.set(ATTR_lval);
-            left->children[0]->attributes.set(ATTR_variable);
-            copy_attrs(right, left->children[0]);
+            //TODO: @JOSE check if left is tok_array and check if right
+                    //has attr_array
+            if(left->symbol == TOK_ARRAY)
+            {
+                temp_ast_node = left->children[1];
+
+            }
+            else
+            {
+                temp_ast_node = left->children[0];
+            }
+            temp_ast_node->attributes.set(ATTR_lval);
+            temp_ast_node->attributes.set(ATTR_variable);
+            copy_attrs(right, temp_ast_node);
             copy_attrs(left, node); //Why is this needed?
             if(!compatible_Nodes(left,
                                  right))
             {
                 cerr << "error, incompatible types in assignment\n";
                 cerr << *left->lexinfo << " : " << *right->lexinfo;
-                cerr << " " << get_attributes(left->attributes) << " : " << get_attributes(right->attributes) << "\n";
+                cerr << " " << get_attributes(left->attributes)
+                << " : " << get_attributes(right->attributes) << "\n";
                 exec::exit_status = 1;
             }
 
@@ -698,7 +722,8 @@ void set_attributes (astree* node)
                     cerr << "Incompatible struct declaration: "
                         << *(left->lexinfo) << " and "
                         << *(right->children[0]->lexinfo) << "\n";
-                        break;
+                    exec::exit_status = 1;
+                    break;
                 }
                 //look up in struct table
                 if(symbol_stack.back() == nullptr)
@@ -710,11 +735,13 @@ void set_attributes (astree* node)
                 else
                 {
                     //then there exists a curr scope, check that one
-                    if(table_find_var(symbol_stack.back(), left->children[0]))
+                    if(table_find_var(symbol_stack.back(),
+                                      left->children[0]))
                     {
-                        cerr << "Duplicate declaraction on variable: " <<
-                            *(left->children[0])->lexinfo << "\n";
-                            break;
+                        cerr << "Duplicate declaraction on variable: "
+                             << *(left->children[0])->lexinfo << "\n";
+                        exec::exit_status = 1;
+                        break;
                     }
                     else
                     {
@@ -729,22 +756,24 @@ void set_attributes (astree* node)
             if(symbol_stack.back() == nullptr)
             {
                 //then new scope
-                define_ident(left->children[0]);
-                print_symbol(symfile, left->children[0]);
+                define_ident(temp_ast_node);
+                print_symbol(symfile, temp_ast_node);
             }
             else
             {
                 //then there exists a curr scope, check that one
-                if(table_find_var(symbol_stack.back(), left->children[0]))
+                if(table_find_var(symbol_stack.back(),
+                                  temp_ast_node))
                 {
-                    cerr << "Duplicate declaraction on variable: " <<
-                        *(left->children[0])->lexinfo << "\n";
-                        break;
+                    cerr << "Duplicate declaraction on variable: "
+                        << *temp_ast_node->lexinfo << "\n";
+                    exec::exit_status = 1;
+                    break;
                 }
                 else
                 {
-                    define_ident(left->children[0]);
-                    print_symbol(symfile, left->children[0]);
+                    define_ident(temp_ast_node);
+                    print_symbol(symfile, temp_ast_node);
                 }
 
             }
@@ -768,7 +797,7 @@ void set_attributes (astree* node)
             if(middle) set_attributes(middle);
             if(right) set_attributes(right);
             break;
-        case TOK_ELSE: //TODO: changed from else. SHould be else or ifelse?
+        case TOK_ELSE:
             break;
         case TOK_RETURN:
             // I think we should check it in Qtion yyoure right.
@@ -784,9 +813,18 @@ void set_attributes (astree* node)
                 {
                     cerr << "error, incompatible types in assignment\n";
                     cerr << *left->lexinfo << " : " << *right->lexinfo;
-                    cerr << " " << left->attributes << " : " << right->attributes;
+                    cerr << " " << left->attributes
+                         << " : " << right->attributes << "\n";
                     exec::exit_status = 1;
                 }
+            if(!left->attributes[ATTR_lval])
+            {
+                cerr << "ERROR: " << *left->lexinfo
+                    << " cannot be assigned to.";
+                exec::exit_status = 1;
+                break;
+            }
+            node->attributes.set(ATTR_vreg);
             break;
         case '-':
         case '*':
@@ -796,19 +834,17 @@ void set_attributes (astree* node)
             //TODO: should be same as -
             node->attributes.set(ATTR_int);
             node->attributes.set(ATTR_vreg);
-            temp_symbol = stack_find_var(left);
-            temp_symbol2 = stack_find_var(right);
-            if(!compatible_Symbols(temp_symbol, temp_symbol2))
+            if(!(left->attributes[ATTR_int]
+                && right->attributes[ATTR_int]))
                 {
-                    cerr << "error, incompatible types in addition\n";
+                    cerr << "error, incompatible types in operation\n";
                     cerr << *left->lexinfo << " : " << *right->lexinfo;
-                    cerr <<  " " <<left->attributes << " : " << right->attributes;
+                    cerr <<  " " <<left->attributes
+                         << " : " << right->attributes << "\n";
                     exec::exit_status = 1;
                     break;
                 }
             copy_attrs(left, node);
-            cerr << *node->lexinfo << ": atribs:" << node->attributes << "\n";
-            exec::exit_status = 1;
             break;
         case TOK_EQ:
         case TOK_NE:
@@ -818,20 +854,24 @@ void set_attributes (astree* node)
         case TOK_GT:
             node->attributes.set(ATTR_int);
             node->attributes.set(ATTR_vreg);
-            if(!compatible_Primitives(left->attributes, right->attributes))
+            set_attributes(left);
+            set_attributes(right);
+            if(!compatible_Attribs(left->attributes,
+                                      right->attributes))
             {
-                cerr << "incompatible types for comparison";
+                cerr << "incompatible types for comparison\n";
+                cerr << "L, R : " << *left->lexinfo << ", " << *right->lexinfo << "\n";
                 exec::exit_status = 1;
             }
             break;
         case TOK_NEG:
         case TOK_POS:
         case '!':
-            node->attributes.set(ATTR_int);
             node->attributes.set(ATTR_vreg);
+            set_attributes(left);
             if(!left->attributes[ATTR_int])
             {
-                cerr << "trying to use increment/decrement on non-int";
+                cerr << "trying to use increment/decrement on non-int\n";
                 exec::exit_status = 1;
             }
             else
@@ -847,20 +887,33 @@ void set_attributes (astree* node)
             node->attributes.set (ATTR_string);
             break;
         case TOK_NEWARRAY:
-            copy_attrs(left, node);
+            if(left->symbol == TOK_INT)
+                node->attributes.set(ATTR_int);
+            if(left->symbol == TOK_STRING)
+                node->attributes.set(ATTR_string);
+            if(left->symbol == TOK_TYPEID)
+                node->attributes.set(ATTR_struct);
+
             node->attributes.set (ATTR_vreg);
             node->attributes.set (ATTR_array);
             break;
         case TOK_CALL:
             //TODO: all of it.
+            for(auto child : node->children)
+            {
+                set_attributes(child);
+            }
             temp_symbol = stack_find_var(left);
+            copy_attrs(left, node);
+            node->attributes.reset(ATTR_function);
             if(!temp_symbol)
             {
                 cerr << "no function of that name\n";
                 exec::exit_status = 1;
                 break;
             }
-            if(node->children.size() - 1 != temp_symbol->parameters->size())
+            if(node->children.size()-1
+               != temp_symbol->parameters->size())
             {
                 cerr << "u fuck up somwhere\n";
                 cerr << node->children.size() << " ";
@@ -870,16 +923,42 @@ void set_attributes (astree* node)
             }
             for(size_t i = 0; i < node->children.size() - 1; i++)
             {
-                if(!compatible_Primitives(node->children[i+1]->attributes, (temp_symbol->parameters->at(i))->attributes))
+                if(!compatible_Primitives((node->children[i+1])->
+                                              attributes,
+                                          (temp_symbol->parameters->
+                                              at(i))->attributes))
                 {
                     cerr << "Incompatible types for function call\n";
+                    cerr << *left->lexinfo << "\n";
+                    cerr <<
+                        get_attributes(node->children[i+1]->attributes)
+                        << " : "
+                        << get_attributes(
+                            temp_symbol->parameters->at(i)->attributes)
+                            << "\n";
                     exec::exit_status = 1;
                     break;
                 }
+
             }
 
             break;
         case TOK_INDEX:
+            //TODO: fill out rest
+            copy_attrs(left, node);
+            node->attributes.reset(ATTR_array);
+            if(left->attributes[ATTR_string]
+                && !left->attributes[ATTR_array])
+            {
+                node->attributes.reset(ATTR_string);
+                node->attributes.set(ATTR_int);
+            }
+            else if (left->attributes[ATTR_int]
+                && left->attributes[ATTR_array])
+            {
+                node->attributes.set(ATTR_int);
+            }
+
             node->attributes.set (ATTR_lval);
             node->attributes.set (ATTR_vaddr);
             break;
@@ -918,7 +997,7 @@ void postorder (astree* tree)
     }
         //tree->block_nr = next_block;
 
-        for (size_t child = 0; child < tree->children.size(); child++) {
+        for (size_t child = 0; child < tree->children.size(); child++){
            postorder(tree->children.at(child));
         }
         set_attributes(tree);
@@ -937,7 +1016,7 @@ void preorder (astree* tree)
     }
         //tree->block_nr = next_block;
         set_attributes(tree);
-        for (size_t child = 0; child < tree->children.size(); child++) {
+        for (size_t child = 0; child < tree->children.size(); child++){
            preorder(tree->children.at(child));
         }
 
@@ -962,32 +1041,41 @@ void traverse (astree* tree)
    }
    else
    {
-       cout << "GET HERE\n";
        if(      tree->symbol == TOK_FUNCTION
              || tree->symbol == TOK_PROTOTYPE)
        {
+           astree* funcNode = nullptr;
+           astree* returnNode = nullptr;
+           if(tree->children[0]->symbol == TOK_ARRAY)
+           {
+               funcNode = tree->children[0]->children[1];
+               returnNode = tree->children[0]->children[0];
+               funcNode->attributes.set(ATTR_array);
+           }
+           else
+           {
+               funcNode = tree->children[0]->children[0];
+               returnNode = tree->children[0];
+           }
+           funcNode->attributes.set(ATTR_function);
 
-           tree->children[0]->children[0]->attributes.set(ATTR_function);
-
-           if(tree->children[0]->symbol == TOK_VOID)
-               tree->children[0]->children[0]->attributes.set(ATTR_void);
-           if(tree->children[0]->symbol == TOK_INT)
-               tree->children[0]->children[0]->attributes.set(ATTR_int);
-           if(tree->children[0]->symbol == TOK_STRING)
-               tree->children[0]->children[0]->attributes.set(ATTR_string);
-           if(tree->children[0]->symbol == TOK_TYPEID)
-               tree->children[0]->children[0]->attributes.set(ATTR_struct);
+           if(returnNode->symbol == TOK_VOID)
+               funcNode->attributes.set(ATTR_void);
+           if(returnNode->symbol == TOK_INT)
+               funcNode->attributes.set(ATTR_int);
+           if(returnNode->symbol == TOK_STRING)
+               funcNode->attributes.set(ATTR_string);
+           if(returnNode->symbol == TOK_TYPEID)
+               funcNode->attributes.set(ATTR_struct);
 
 
 
-           print_symbol(symfile, tree->children[0]->children[0]);
+           print_symbol(symfile, funcNode);
        }
        postorder(tree);
        if(      tree->symbol == TOK_FUNCTION
              || tree->symbol == TOK_PROTOTYPE)
        {
-
-
            exit_block();
        }
    }
@@ -999,9 +1087,15 @@ void symbol_typecheck(astree* tree, FILE* outfile)
 {
     symfile = outfile;
     symbol_stack.push_back(new symbol_table()); //TODO: maybe change
+    if(tree == nullptr)
+    {
+        cerr << "Root tree is null\n";
+        exec::exit_status = 1;
+        return;
+    }
     for (auto child : tree->children)
     {
         traverse(child);
     }
-    print_stack();
+    //print_stack();
 }
