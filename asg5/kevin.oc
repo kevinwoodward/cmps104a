@@ -1,0 +1,15 @@
+struct foo {
+	int x;
+	int y;
+}
+
+foo function(int a, int b)
+{
+	foo f = new foo();
+	
+	int c = a;
+	return f;
+}
+
+function(1, 2);
+
